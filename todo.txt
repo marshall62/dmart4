@@ -1,0 +1,18 @@
+12/31/24:   I have the add artwork form submitting all fields (including for an existing artwork
+that the form can be used to modify it).  Endpoint rejects attempts to update artwork (when including
+is present until I am certain everything works right))
+
+If uploading a new artwork:
+
+1.  Save the image to the bucket storage DONE
+ .  Add endpoint for deleting artwork + image so I can get rid of junk created by testing DONE
+
+. create a git repo for this
+
+2.  Once that works, work on server-side image resizing so that I can insert 3 images in the
+bucket storage
+
+3. Editing existing artwork: 
+   For updating existing artwork images,  I'll need to remove old ones from bucket
+
+4.  In step 1 above, after deleting an artwork, it remains in the table.
