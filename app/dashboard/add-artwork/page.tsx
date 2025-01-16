@@ -1,5 +1,6 @@
 "use client"
 import Form from 'next/form'
+import { Jimp } from "jimp";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react'
 
@@ -11,17 +12,20 @@ type Artwork = {
     height?: number | null
     media?: string | null
     category_name?: string | null
+    filename?: string | null
     price?: number | null
     imageFile?: File | null
+    thumbnailFile?: File | null
+    midsizeFile?: File | null
 }
 
 
 export default function AddArtwork () {
 
     const [formData, setFormData] = useState<Artwork>({});
-    const [thumbnail, setThumbnail] = useState<string>("");
+    const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState(null);
-    const [artwork, setArtwork] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", imageFile:null});
+    const [artwork, setArtwork] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", imageFile:null, filename:""});
     const searchParams = useSearchParams();
     const id = searchParams.get('id')
     const router = useRouter();
@@ -35,7 +39,8 @@ export default function AddArtwork () {
                 aw[k] = "";
             }
            }
-           setArtwork(aw);
+           setArtwork(aw)
+           setThumbnail(aw.thumbnail_image_url)
         }
         if (id) {
             doLoad().catch(console.log)     
@@ -54,38 +59,67 @@ export default function AddArtwork () {
         //setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
       };
     
-    const handleImageFileChange = (event) => {
+    const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
-        const img:File = files[0] as File;
-        setImageFile(img);
-        setArtwork((prevArtwork) => ({...prevArtwork, imageFile: img}))
-        setThumbnail(URL.createObjectURL(img));
+        const file:File = files[0] as File;
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = async (e) => {
+            console.log("In the onload with e as", e);
+          const data = e.target?.result;
+    
+          if (!data || !(data instanceof ArrayBuffer)) {
+            return;
+          }
+    
+          // Manipulate images uploaded directly from the website.
+          const image = await Jimp.fromBuffer(data);
+          image.resize({w: 800});
+          const upload_midsize = await image.getBuffer("image/jpeg")
+          image.resize({w: 150});
+          const preview_thumb = await image.getBase64("image/jpeg")
+          const upload_thumb = await image.getBuffer("image/jpeg")
+          setThumbnail(preview_thumb);
+          const imageFile = new Blob([data], { type: 'image/jpeg' });
+          const thumbnailFile = new Blob([upload_thumb], { type: 'image/jpeg' })
+          const midsizeFile = new Blob([upload_midsize], { type: 'image/jpeg' })
+          setArtwork((prevArtwork) => ({...prevArtwork, filename: file.name, thumbnailFile, imageFile, midsizeFile}))
+
+        };
+        reader.readAsArrayBuffer(file);
+        setImageFile(file);
+        // setArtwork((prevArtwork) => ({...prevArtwork, imageFile: file}))
+        // setThumbnail(URL.createObjectURL(file));
 
     }
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log("raw artwork", artwork);
+        console.log("submitting artwork", artwork);
         const fd = new FormData();
         for (let field in artwork) {
             fd.append(field, artwork[field])
         }
 
-        console.log("fd title", fd.get('title'))
-        console.log("fd imageFile", fd.get('imageFile'))
         if (!imageFile) {
             fd.delete('imageFile')
+            fd.delete('thumbnailFile')
+            fd.delete('midsizeFile')
         }
+
         const response = await fetch('/api/artworks', {
             method: 'POST',
             body: fd,
-          });
+            });
         
         const result = await response.json();
         console.log("result is ", result);
         navigateToServerPage();
-
-        
+           
     };
 
     return (<div className="ml-4"> 
@@ -127,15 +161,15 @@ export default function AddArtwork () {
                 <div className="ml-10">
                     <label className="block" htmlFor="fileInput">Image file</label>
                     <input id="fileInput" onChange={handleImageFileChange} value="" name="imageFile" type="file"></input>
-                    {imageFile ?
-                        <div className="mt-4"><img src={thumbnail} className="w-[260px]"/></div>
-                        : artwork.image_url && <div className="mt-4"><img src={artwork.image_url} className="w-[260px]"/></div>}
+                    {thumbnail ?
+                        <div className="mt-4">{artwork.filename} <img src={thumbnail} /></div> : <div/>}
                 </div>
             </div>
             <div className="flex">
                 <div className="mb-5">
                     <label htmlFor="media"className=' bold mb-3'>Media</label>
                     <select name="media" className="ml-5 border border-2 border-solid" value={artwork['media']} onChange={handleChange}>
+                        <option>Select One</option>
                         <option value="oil on canvas">oil on canvas</option>
                         <option value="oil on paper">oil on paper</option>
                         <option value="oil on muslin panel">oil on muslin panel</option>
@@ -147,6 +181,7 @@ export default function AddArtwork () {
                 <div className="ml-5 mb-5">
                     <label htmlFor="category_name"className=' bold mb-3'>Category</label>
                     <select name="category_name" className="ml-5 border border-2 border-solid" value={artwork['category']} onChange={handleChange}> 
+                        <option>Select One</option>
                         <option value="Portrait">Portrait</option>
                         <option value="Landscape">Landscape</option>
                         <option value="Still Life">Still life</option>
