@@ -92,8 +92,7 @@ export default function AddArtwork () {
         };
         reader.readAsArrayBuffer(file);
         setImageFile(file);
-        // setArtwork((prevArtwork) => ({...prevArtwork, imageFile: file}))
-        // setThumbnail(URL.createObjectURL(file));
+
 
     }
 
