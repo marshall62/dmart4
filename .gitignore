@@ -38,3 +38,14 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# images
+/images/*.jpg
+large_images
+midsize_images
+thumbnail_images
+
+# python
+/images/venv/*
+
+github personal token.txt

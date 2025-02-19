@@ -39,7 +39,7 @@ export async function GET(request: Request) {
         }
     }
     const { blobs } = await getBlobs(); 
-    return Response.json(blobs);
+    return Response.json({count: blobs.length, blobs});
 }
 
 /* Uploads an image file to the vercel blob storage */

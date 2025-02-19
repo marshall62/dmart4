@@ -34,3 +34,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+## USing Postgres locally
+
+PgAdmin4 is being used to view data in the vercel database.  It has a connection string of
+hostname: ep-rough-paper-a4opslp9-pooler.us-east-1.aws.neon.tech
+port: 5432
+Maintenance db: verceldb
+username: default

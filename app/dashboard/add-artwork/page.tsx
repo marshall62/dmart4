@@ -25,6 +25,7 @@ export default function AddArtwork () {
     const [formData, setFormData] = useState<Artwork>({});
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState(null);
+    const [beforeEditedValues, setBeforeEditedValues] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", imageFile:null, filename:""});
     const [artwork, setArtwork] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", imageFile:null, filename:""});
     const searchParams = useSearchParams();
     const id = searchParams.get('id')
@@ -39,7 +40,8 @@ export default function AddArtwork () {
                 aw[k] = "";
             }
            }
-           setArtwork(aw)
+           setBeforeEditedValues({...aw});
+           setArtwork(aw);
            setThumbnail(aw.thumbnail_image_url)
         }
         if (id) {
@@ -76,15 +78,21 @@ export default function AddArtwork () {
             return;
           }
     
-          // Manipulate images uploaded directly from the website.
-          const image = await Jimp.fromBuffer(data);
-          image.resize({w: 800});
-          const upload_midsize = await image.getBuffer("image/jpeg")
-          image.resize({w: 150});
-          const preview_thumb = await image.getBase64("image/jpeg")
-          const upload_thumb = await image.getBuffer("image/jpeg")
+          // create 3 resized images off the original data
+          // TODO:  The large and midsize files are too big
+          // midsize of david_marshall_7 is 500+ KB and large is 1.67MB
+          const image1 = await Jimp.fromBuffer(data);
+          const image2 = await Jimp.fromBuffer(data);
+          const image3 = await Jimp.fromBuffer(data);
+          image1.resize({w: 1500});
+          const upload_largesize = await image1.getBuffer("image/jpeg")
+          image2.resize({w: 800});
+          const upload_midsize = await image2.getBuffer("image/jpeg")
+          image3.resize({w: 150});
+          const preview_thumb = await image3.getBase64("image/jpeg")
+          const upload_thumb = await image3.getBuffer("image/jpeg")
           setThumbnail(preview_thumb);
-          const imageFile = new Blob([data], { type: 'image/jpeg' });
+          const imageFile = new Blob([upload_largesize], { type: 'image/jpeg' });
           const thumbnailFile = new Blob([upload_thumb], { type: 'image/jpeg' })
           const midsizeFile = new Blob([upload_midsize], { type: 'image/jpeg' })
           setArtwork((prevArtwork) => ({...prevArtwork, filename: file.name, thumbnailFile, imageFile, midsizeFile}))
@@ -96,25 +104,58 @@ export default function AddArtwork () {
 
     }
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-        console.log("submitting artwork", artwork);
+    const createArtwork = async () => {
         const fd = new FormData();
         for (let field in artwork) {
             fd.append(field, artwork[field])
         }
-
+        // imageFile only set if a file is chosen by input
         if (!imageFile) {
             fd.delete('imageFile')
             fd.delete('thumbnailFile')
             fd.delete('midsizeFile')
         }
-
         const response = await fetch('/api/artworks', {
             method: 'POST',
             body: fd,
-            });
+            }); 
+        return response;
+    }
+
+    const updateArtwork = async () => {
+        const fd = new FormData();
+        // only include fields that have changed from their original setting
+        for (let field in artwork) {
+            if (artwork[field] !== beforeEditedValues[field]) {
+                fd.set(field,artwork[field])
+            }
+        }
+        fd.set('id', beforeEditedValues['id']);
+        // imageFile is only set if one was chosen
+        if (!imageFile) {
+            fd.delete('imageFile')
+            fd.delete('thumbnailFile')
+            fd.delete('midsizeFile')
+        }
         
+        const response = await fetch('/api/artworks', {
+            method: 'PATCH',
+            body: fd,
+            });
+        return response;
+    }
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        console.log("submitting artwork", artwork);
+        
+        let response;
+        if (!artwork.id) {
+            response = await createArtwork();
+        }
+        else {
+            response = await updateArtwork();
+        }
         const result = await response.json();
         console.log("result is ", result);
         navigateToServerPage();
@@ -163,6 +204,18 @@ export default function AddArtwork () {
                     {thumbnail ?
                         <div className="mt-4">{artwork.filename} <img src={thumbnail} /></div> : <div/>}
                 </div>
+                <div className="">
+                        <label htmlFor="urls"className=' bold mb-3'>URLs</label>
+                        <div id="urls">
+                            <span><b>Large Image:</b> {artwork.image_url}</span>
+                        </div>
+                        <div className="mt-2">
+                            <span><b>Midsize Image:</b> {artwork.midsize_image_url}</span>
+                        </div>
+                        <div className="mt-2">
+                            <span><b>Thumbnail Image:</b> {artwork.thumbnail_image_url}</span>
+                        </div>
+                    </div>
             </div>
             <div className="flex">
                 <div className="mb-5">
