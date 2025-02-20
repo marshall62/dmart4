@@ -15,9 +15,6 @@ Y Posting a new artwork works
 DONE: Editing existing artwork: 
 app/api/artworks/route.ts PATCH is able to update artwork
 
-__ GIT wont allow push because I made a commit of todo.txt with a secret in it.  I then made another commit after
-it with the file having it removed (so two commits).  But push still fails because the first commit has it.
-Need to figure out solution.
 
 __ Uploaded images (POST and PATCH) are resized in UI but midsize and large are too big.
 

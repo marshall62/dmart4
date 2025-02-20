@@ -14,9 +14,9 @@ type Artwork = {
     category_name?: string | null
     filename?: string | null
     price?: number | null
-    imageFile?: File | null
-    thumbnailFile?: File | null
-    midsizeFile?: File | null
+    imageFile?: Blob | null
+    thumbnailFile?: Blob | null
+    midsizeFile?: Blob | null
 }
 
 
@@ -26,7 +26,8 @@ export default function AddArtwork () {
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState(null);
     const [beforeEditedValues, setBeforeEditedValues] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", imageFile:null, filename:""});
-    const [artwork, setArtwork] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", imageFile:null, filename:""});
+    const [artwork, setArtwork] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", 
+        imageFile:null, thumbnailFile:null, midsizeFile: null, filename:""});
     const searchParams = useSearchParams();
     const id = searchParams.get('id')
     const router = useRouter();
@@ -40,7 +41,7 @@ export default function AddArtwork () {
                 aw[k] = "";
             }
            }
-           setBeforeEditedValues({...aw});
+           setBeforeEditedValues({...aw, id: parseInt(id)});
            setArtwork(aw);
            setThumbnail(aw.thumbnail_image_url)
         }
@@ -79,29 +80,28 @@ export default function AddArtwork () {
           }
     
           // create 3 resized images off the original data
-          // TODO:  The large and midsize files are too big
-          // midsize of david_marshall_7 is 500+ KB and large is 1.67MB
-          const image1 = await Jimp.fromBuffer(data);
+          let image1 = await Jimp.fromBuffer(data);
           const image2 = await Jimp.fromBuffer(data);
           const image3 = await Jimp.fromBuffer(data);
-          image1.resize({w: 1500});
-          const upload_largesize = await image1.getBuffer("image/jpeg")
-          image2.resize({w: 800});
-          const upload_midsize = await image2.getBuffer("image/jpeg")
+          const resized_large_image_buf = await image1
+            .resize({w: Math.min(image1.width, 1500)})
+            .getBuffer('image/jpeg', { quality: 70 })
+          const resized_mid_image_buf = await image2
+            .resize({w: 800})
+            .getBuffer('image/jpeg', { quality: 70 });
           image3.resize({w: 150});
           const preview_thumb = await image3.getBase64("image/jpeg")
-          const upload_thumb = await image3.getBuffer("image/jpeg")
+          const upload_thumb = await image3.getBuffer("image/jpeg", {quality: 50})
           setThumbnail(preview_thumb);
-          const imageFile = new Blob([upload_largesize], { type: 'image/jpeg' });
+          const largeImageFile = new Blob([resized_large_image_buf], { type: 'image/jpeg' });
           const thumbnailFile = new Blob([upload_thumb], { type: 'image/jpeg' })
-          const midsizeFile = new Blob([upload_midsize], { type: 'image/jpeg' })
-          setArtwork((prevArtwork) => ({...prevArtwork, filename: file.name, thumbnailFile, imageFile, midsizeFile}))
+          const midsizeFile = new Blob([resized_mid_image_buf], { type: 'image/jpeg' })
+          setArtwork((prevArtwork:Artwork) => ({...prevArtwork, filename: file.name, thumbnailFile, 
+            imageFile: largeImageFile, midsizeFile}))
 
         };
         reader.readAsArrayBuffer(file);
         setImageFile(file);
-
-
     }
 
     const createArtwork = async () => {
@@ -126,6 +126,11 @@ export default function AddArtwork () {
         const fd = new FormData();
         // only include fields that have changed from their original setting
         for (let field in artwork) {
+            if (imageFile) {
+                // needs to be in patch even if the filename is the same as before
+                // n.b. it won't be put in if no file has been selected
+                fd.set('filename',artwork['filename'])
+            }
             if (artwork[field] !== beforeEditedValues[field]) {
                 fd.set(field,artwork[field])
             }
@@ -137,7 +142,6 @@ export default function AddArtwork () {
             fd.delete('thumbnailFile')
             fd.delete('midsizeFile')
         }
-        
         const response = await fetch('/api/artworks', {
             method: 'PATCH',
             body: fd,
