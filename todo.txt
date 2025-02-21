@@ -16,8 +16,6 @@ DONE: Editing existing artwork:
 app/api/artworks/route.ts PATCH is able to update artwork
 
 
-__ Uploaded images (POST and PATCH) are resized in UI but midsize and large are too big.
-
 _ Setting the tags on artwork with auto complete input
 
 _ make dashboard be paginated so that I don't have to scroll so much

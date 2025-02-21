@@ -42,7 +42,7 @@ export function Artwork({ artwork }: { artwork: SelectArtwork }) {
       <TableCell className="hidden md:table-cell">{artwork.is_active}</TableCell>
       <TableCell className="hidden md:table-cell">
         <div className="flex justify-between">
-          <Link href={editLink}>Ed</Link>
+          <Link href={editLink}><Image width="25" height="25" alt="Edit" src="/icons8-pencil-50.png"/></Link>
           <Link href="#" onClick={async () => {
             if (confirm("Are you sure?")) {
               await fetch('/api/artworks?id=' + artwork.id, {
@@ -52,7 +52,7 @@ export function Artwork({ artwork }: { artwork: SelectArtwork }) {
             }
           }
           }>
-            Del
+            <Image width="25" height="25" alt="Edit" src="/icons8-trash-50.png"/>
           </Link>
         </div>
       </TableCell>

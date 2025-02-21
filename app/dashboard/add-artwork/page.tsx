@@ -201,6 +201,11 @@ export default function AddArtwork () {
                         <input className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block" id="price" 
                         name="price" value={ artwork['price']} type="text" onChange={handleChange}></input>
                     </div>
+                    <div className="mb-5">
+                    <label htmlFor="tags" className="bold mb-3bold mb-3">Tags</label>
+                    <input id="tags" className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block"
+                     type="text"></input>
+                </div>
                 </div>
                 <div className="ml-10">
                     <label className="block" htmlFor="fileInput">Image file</label>
@@ -211,13 +216,23 @@ export default function AddArtwork () {
                 <div className="">
                         <label htmlFor="urls"className=' bold mb-3'>URLs</label>
                         <div id="urls">
-                            <span><b>Large Image:</b> {artwork.image_url}</span>
+                            <span><b>Large Image:</b> 
+                            <a target="_blank" href={artwork.image_url} 
+                            className="underline text-blue-600 text-sm hover:text-blue-800 visited:text-purple-600">
+                                {artwork.image_url}
+                            </a></span>
                         </div>
                         <div className="mt-2">
-                            <span><b>Midsize Image:</b> {artwork.midsize_image_url}</span>
+                            <span><b>Midsize Image:</b> 
+                            <a target="_blank" href={artwork.midsize_image_url} 
+                            className="underline text-blue-600 text-sm hover:text-blue-800 visited:text-purple-600">
+                            {artwork.midsize_image_url}</a></span>
                         </div>
                         <div className="mt-2">
-                            <span><b>Thumbnail Image:</b> {artwork.thumbnail_image_url}</span>
+                            <span><b>Thumbnail Image:</b> 
+                            <a target="_blank" href={artwork.thumbnail_image_url} 
+                            className="underline text-blue-600 text-sm hover:text-blue-800 visited:text-purple-600">
+                            {artwork.thumbnail_image_url}</a></span>
                         </div>
                     </div>
             </div>
@@ -235,8 +250,8 @@ export default function AddArtwork () {
                     </select>
                 </div>
                 <div className="ml-5 mb-5">
-                    <label htmlFor="category_name"className=' bold mb-3'>Category</label>
-                    <select name="category_name" className="ml-5 border border-2 border-solid" value={artwork['category']} onChange={handleChange}> 
+                    <label htmlFor="category_name" className=' bold mb-3'>Category</label>
+                    <select name="category_name" className="ml-5 border border-2 border-solid" value={artwork['category_name']} onChange={handleChange}> 
                         <option>Select One</option>
                         <option value="Portrait">Portrait</option>
                         <option value="Landscape">Landscape</option>
@@ -246,6 +261,7 @@ export default function AddArtwork () {
                         <option>Other</option>
                     </select>
                 </div>
+
             </div>
             <div className="flex justify-space-between">
                 <button className="px-4 py-2 border border-solid border-2" onClick={navigateToServerPage} type="button">Cancel</button>
