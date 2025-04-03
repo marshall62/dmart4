@@ -2,7 +2,8 @@
 import Form from 'next/form'
 import { Jimp } from "jimp";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { ReactTags } from 'react-tag-autocomplete'
 
 type Artwork = {
     id?: number | null;
@@ -31,6 +32,44 @@ export default function AddArtwork () {
     const searchParams = useSearchParams();
     const id = searchParams.get('id')
     const router = useRouter();
+    const [selectedTags, setSelectedTags] = useState<string[]>([])
+    const [tags, setTags] = useState<string>()
+    const [suggestedTags, setSuggestedTags] = useState([])
+
+    const onAdd = useCallback(
+      (newTag) => {
+        setSelectedTags([...selectedTags, newTag])
+      },
+      [selectedTags]
+    )
+  
+    const onDelete = useCallback(
+      (tagIndex) => {
+        setSelectedTags(selectedTags.filter((_, i) => i !== tagIndex))
+      },
+      [selectedTags]
+    )
+
+    useEffect( () => {
+        const doLoad = async () => {
+            const x =  await fetch('/api/tags');
+            const tags = await x.json()
+            // console.log("Got tese tags", tags)
+            setSuggestedTags(tags);
+            const y =  await fetch('/api/tags?artworkId=' + id);
+            const artworkTags = await y.json()
+            setSelectedTags(artworkTags);
+            let tagsCsv = "";
+            if (artworkTags) {
+                artworkTags.forEach(t => {
+                    tagsCsv += t + ",";
+                });
+                setTags(tagsCsv.slice(0,-1));
+            }
+        }
+
+        doLoad().catch(console.log);
+    }, [id])
 
     useEffect( () => {
         const doLoad = async () => {
@@ -43,6 +82,7 @@ export default function AddArtwork () {
            }
            setBeforeEditedValues({...aw, id: parseInt(id)});
            setArtwork(aw);
+           setSelectedTags([])
            setThumbnail(aw.thumbnail_image_url)
         }
         if (id) {
@@ -57,10 +97,17 @@ export default function AddArtwork () {
 
     const handleChange = (event) => {
         const { name, value } = event.target;
-        console.log(`changed ${name} to ${value}`, event.target)
         setArtwork((prevArtwork) => ({ ...prevArtwork, [name]: value}))
         //setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
       };
+
+    
+    const handleAddTag = (event) => {
+        event.preventDefault();
+        const tagsCsv: string = event.target.value;
+        setTags(tagsCsv)
+        // setSelectedTags([...selectedTags, event.target.value])
+    }
     
     const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -72,7 +119,6 @@ export default function AddArtwork () {
         const reader = new FileReader();
 
         reader.onload = async (e) => {
-            console.log("In the onload with e as", e);
           const data = e.target?.result;
     
           if (!data || !(data instanceof ArrayBuffer)) {
@@ -109,6 +155,8 @@ export default function AddArtwork () {
         for (let field in artwork) {
             fd.append(field, artwork[field])
         }
+        const tags = tagsToList()
+        tags.forEach(tag => fd.append('tags', tag));
         // imageFile only set if a file is chosen by input
         if (!imageFile) {
             fd.delete('imageFile')
@@ -135,6 +183,8 @@ export default function AddArtwork () {
                 fd.set(field,artwork[field])
             }
         }
+        const taglist = tagsToList()
+        taglist.forEach(tag => fd.append('tags', tag));
         fd.set('id', beforeEditedValues['id']);
         // imageFile is only set if one was chosen
         if (!imageFile) {
@@ -149,10 +199,15 @@ export default function AddArtwork () {
         return response;
     }
 
+    const tagsToList = () => {
+        let selected = tags ? tags.split(',') : []
+        selected = selected.map(x => x.trim())
+        setSelectedTags(selected)
+        return selected;
+    }
+
     const handleSubmit = async (event) => {
         event.preventDefault();
-        console.log("submitting artwork", artwork);
-        
         let response;
         if (!artwork.id) {
             response = await createArtwork();
@@ -161,7 +216,6 @@ export default function AddArtwork () {
             response = await updateArtwork();
         }
         const result = await response.json();
-        console.log("result is ", result);
         navigateToServerPage();
            
     };
@@ -177,6 +231,7 @@ export default function AddArtwork () {
                 <input className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-9/12 block" 
                 id="title" value={artwork['title']} name="title"  type="text" onChange={handleChange}></input>
             </div>
+            
             <div className="flex">
                 <div>
                     <div className="mb-5">
@@ -201,11 +256,7 @@ export default function AddArtwork () {
                         <input className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block" id="price" 
                         name="price" value={ artwork['price']} type="text" onChange={handleChange}></input>
                     </div>
-                    <div className="mb-5">
-                    <label htmlFor="tags" className="bold mb-3bold mb-3">Tags</label>
-                    <input id="tags" className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block"
-                     type="text"></input>
-                </div>
+                    
                 </div>
                 <div className="ml-10">
                     <label className="block" htmlFor="fileInput">Image file</label>
@@ -237,6 +288,7 @@ export default function AddArtwork () {
                     </div>
             </div>
             <div className="flex">
+            
                 <div className="mb-5">
                     <label htmlFor="media"className=' bold mb-3'>Media</label>
                     <select name="media" className="ml-5 border border-2 border-solid" value={artwork['media']} onChange={handleChange}>
@@ -261,8 +313,16 @@ export default function AddArtwork () {
                         <option>Other</option>
                     </select>
                 </div>
+                {/* className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block" */}
 
+                
             </div>
+            <div className="mb-5">
+                <label htmlFor="tags" className="bold mb-3bold mb-3">Tags</label>
+                <input id="tags" className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-9/12 block"
+                            type="text" onInput={handleAddTag} value={tags}></input>
+            </div>
+
             <div className="flex justify-space-between">
                 <button className="px-4 py-2 border border-solid border-2" onClick={navigateToServerPage} type="button">Cancel</button>
                 <button className="ml-8 px-4 py-2 border border-solid border-2" type="submit">Submit</button>
@@ -271,4 +331,6 @@ export default function AddArtwork () {
            
         </form>
     </div>);
+
+
 }

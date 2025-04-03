@@ -1,11 +1,10 @@
-import { artworks, db, deleteArtworkById, getArtwork, getArtworks, SelectArtwork, updateArtwork } from "@/lib/db";
+import { artworks, db, deleteArtworkById, getArtwork, getArtworks, 
+  SelectArtwork, updateArtwork, updateArtworkTags } from "@/lib/db";
 import { list, head, del, put, ListBlobResult, HeadBlobResult } from '@vercel/blob';
 
 /* Uploads an image file to the vercel blob storage */
 async function uploadImage(filename: string, file: any) {
-  console.log("Uploading image " + filename)
   const upload = await put(filename, file, {access: 'public', contentType: 'image/jpeg'});
-  console.log("Blob is ", upload)
   return upload;
 }
 
@@ -43,6 +42,10 @@ function formDataToPatchRecord (formData) {
   return rec;
 }
 
+function formDataTags (formData): string[] {
+  return formData.getAll('tags')
+}
+
 function formDataToRecord (formData) {
   let rec: any =   {
     title: formData.get('title'),
@@ -63,16 +66,16 @@ function formDataToRecord (formData) {
 
 export async function PATCH(request: Request) {
   const form = await request.formData();
-  console.log("Form data recieved in PATCH as", form);
   const artId = parseInt(form.get('id') as string);
   form.delete('id');
   const new_data = formDataToPatchRecord(form);
+  const tags = formDataTags(form);
   let file = form.has('imageFile') ? form.get('imageFile') as File : null;
   const thumbnail_file = form.has('thumbnailFile') ? form.get('thumbnailFile') as File : null;
   const midsize_file = form.has('midsizeFile') ? form.get('midsizeFile') as File : null;
   // if a file is uploaded, delete the old files from the bucket and update the 
   // db with the new metadata and filename
-  if (new_data.filename && file && midsize_file && thumbnail_file) {
+  if ( new_data.filename && file && midsize_file && thumbnail_file) {
     const artwork = await getArtwork(artId);
     if (artwork.image_url) deleteBlob(artwork.image_url!);
     if (artwork.midsize_image_url) deleteBlob(artwork.midsize_image_url!);
@@ -80,49 +83,43 @@ export async function PATCH(request: Request) {
     const large_blob = await uploadImage(new_data.filename, file)
     const mid_blob = await uploadImage(new_data.filename, midsize_file)
     const thumb_blob = await uploadImage(new_data.filename, thumbnail_file)
-    // TODO This works fine:  UI resize of large and midsize is resulting in too big files
     new_data['image_url'] = large_blob.url;
     new_data['midsize_image_url'] = mid_blob.url;
     new_data['thumbnail_image_url'] = thumb_blob.url;
   }
   // update the artwork's given fields
-  updateArtwork(artId, new_data);
+  if (Object.keys(new_data).length !== 0)
+    await updateArtwork(artId, new_data);
+  // TODO under present implementation, this means you cant clear the tags
+  // but I want to rework tag updating anyway so that it doesnt always do a full replace everytime
+  // tags are sent
+  if (tags.length > 0)
+    await updateArtworkTags(artId, tags);
   const artwork = await getArtwork(artId);
+  
   return Response.json(artwork)
 }
 
 export async function POST(request: Request) {
   const form = await request.formData();
-  console.log("Form data recieved in POST as", form);
-  const artId = form.get('id');
-  if (artId) {
-    console.log("updating artwork not yet allowed", artId);
-    return Response.json({
-      id: artId
-    });
-  }
   let file = form.has('imageFile') ? form.get('imageFile') as File : null;
   const thumbnail = form.has('thumbnailFile') ? form.get('thumbnailFile') as File : null;
   const midsize = form.has('midsizeFile') ? form.get('midsizeFile') as File : null;
   let blobMetadata = null;
   if (file) {
-      console.log("File is ", file);
       const imageData = await file.arrayBuffer();
       blobMetadata = await uploadImage(file.name, imageData);
-      console.log("Created blob ", blobMetadata.url);
   }
   let thumbnailMetadata = null;
   if (thumbnail) {
     const imageData = await thumbnail.arrayBuffer();
     thumbnailMetadata = await uploadImage(thumbnail.name, imageData);
-      console.log("Created thumbnail blob ", thumbnailMetadata.url);
   }
 
   let midsizeMetadata = null;
   if (midsize) {
     const imageData = await midsize.arrayBuffer();
     midsizeMetadata = await uploadImage(midsize.name, imageData);
-      console.log("Created midsize blob ", midsizeMetadata.url);
   }
   
   let rec: any =   {
@@ -172,12 +169,10 @@ export async function DELETE(request: Request) {
   const id = parseInt(artworkId);
   const artwork: SelectArtwork = await getArtwork(id);
   if (artwork) {
-    console.log(`Removing image urls \n${artwork.image_url} \n${artwork.thumbnail_image_url} \n${artwork.midsize_image_url}` )
     if (artwork.image_url) await deleteBlob(artwork.image_url);
     if (artwork.thumbnail_image_url) await deleteBlob(artwork.thumbnail_image_url);
     if (artwork.midsize_image_url) await deleteBlob(artwork.midsize_image_url);
 
-    console.log("Removing artwork record", artwork)
     deleteArtworkById(id);
     return Response.json({});
   }

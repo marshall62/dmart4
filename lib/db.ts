@@ -101,8 +101,10 @@ export type SelectProduct = typeof products.$inferSelect;
 export const insertProductSchema = createInsertSchema(products);
 export const insertArtworksSchema = createInsertSchema(artworks);
 
-export async function createArtwork(artwork) {
-  const res = await db.insert(artworks,artwork)
+export async function createArtwork(artwork: any) {
+  const artworkIds = await db.insert(artworks).values([artwork]).returning({insertedId: artworks.id});
+  const artworkId = artworkIds[0].insertedId;
+  return artworkId;
 }
 
 export async function getArtworks(): Promise<SelectArtwork[]> {
@@ -123,8 +125,64 @@ export async function updateArtwork (id: number, data) {
   await db.update(artworks).set(data).where(eq(artworks.id, id));
 }
 
+export async function createTag (name: string): tags {
+  const tagIds = await db.insert(tags).values({name}).returning({insertedId: tags.id})
+  const tagId = tagIds[0].insertedId;
+  return tagId;
+}
+
+export async function deleteArtworkTags (id: number) {
+  await db.delete(artworksToTags).where(eq(artworksToTags.artworkId,id));
+}
+
+export async function updateArtworkTags (artId: number, tags: string[]) {
+  // currently, we delete all the tags of the artwork and then replace
+  // them
+  await deleteArtworkTags(artId);
+  let artworkTags = [];
+  for (let name of tags) {
+    const existing = await getTagByName(name);
+    // if theres an existing tag, use it; o/w create a new one
+    if (existing) {
+      artworkTags.push({artworkId:artId, tagId:existing.id})
+    }
+    else {
+      const id = await createTag(name);
+      artworkTags.push({artworkId:artId, tagId:id})
+    }
+  }
+  console.log("Adding these tags back to artwork", artworkTags)
+  if (artworkTags.length > 0) {
+    await db.insert(artworksToTags).values(artworkTags)
+  }
+}
+
+
+export async function getTagByName (name: string) {
+  const tagRows = await db.select().from(tags).where(eq(tags.name, name))
+  console.log("got these tag rows", tagRows);
+  return (tagRows && tagRows.length > 0) ?
+     tagRows[0]
+     :
+     null
+}
+
 export async function deleteArtworkById(id: number) {
   await db.delete(artworks).where(eq(artworks.id, id));
+}
+
+export async function getAllTags() {
+  return await db.select().from(tags).orderBy(tags.id);
+}
+
+export async function getTagsForArtwork(artworkId: number) {
+  const rows = await db.select()
+  .from(artworksToTags)
+  .leftJoin(tags, eq(artworksToTags.tagId, tags.id))
+  .leftJoin(artworks, eq(artworksToTags.artworkId, artworks.id))
+  .where(eq(artworks.id, artworkId))
+  return rows.map(r => r.tags);
+
 }
 
 export async function getProducts(
