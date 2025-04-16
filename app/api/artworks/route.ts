@@ -1,4 +1,4 @@
-import { artworks, db, deleteArtworkById, getArtwork, getArtworks, 
+import { artworks, db, deleteArtworkById, deleteTagJoinsForArtwork, getArtwork, getArtworks, 
   SelectArtwork, updateArtwork, updateArtworkTags } from "@/lib/db";
 import { list, head, del, put, ListBlobResult, HeadBlobResult } from '@vercel/blob';
 
@@ -172,8 +172,8 @@ export async function DELETE(request: Request) {
     if (artwork.image_url) await deleteBlob(artwork.image_url);
     if (artwork.thumbnail_image_url) await deleteBlob(artwork.thumbnail_image_url);
     if (artwork.midsize_image_url) await deleteBlob(artwork.midsize_image_url);
-
-    deleteArtworkById(id);
+    await deleteTagJoinsForArtwork(id);
+    await deleteArtworkById(id);
     return Response.json({});
   }
 }

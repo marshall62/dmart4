@@ -15,7 +15,13 @@ Y Posting a new artwork works
 DONE: Editing existing artwork: 
 app/api/artworks/route.ts PATCH is able to update artwork
 
+- Test create, update, delete of artwork.  If working, merge add-tags branch into main branch
+- Build a login page and make sure that all the admin pages are only accessible when logged in
+- See if I can get the main page of the user website to run in this repo accessing the database to create a context
+   with all artworks.
+- begin converting the art webapp to use the Vercel API and the data from postgres
 
+Admin:
 _ Setting the tags on artwork with auto complete input
 
 _ make dashboard be paginated so that I don't have to scroll so much

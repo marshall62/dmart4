@@ -22,16 +22,6 @@ export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
 export const statusEnum = pgEnum('status', ['active', 'inactive', 'archived']);
 
-export const products = pgTable('products', {
-  id: serial('id').primaryKey(),
-  imageUrl: text('image_url').notNull(),
-  name: text('name').notNull(),
-  status: statusEnum('status').notNull(),
-  price: numeric('price', { precision: 10, scale: 2 }).notNull(),
-  stock: integer('stock').notNull(),
-  availableAt: timestamp('available_at').notNull()
-});
-
 export const artworks = pgTable('artworks', {
   id: serial('id').primaryKey(),
   image_url: text('image_url'),
@@ -97,8 +87,6 @@ export type SelectArtwork = typeof artworks.$inferSelect;
 //   artwork_id: integer('name').primaryKey()
 // })
 
-export type SelectProduct = typeof products.$inferSelect;
-export const insertProductSchema = createInsertSchema(products);
 export const insertArtworksSchema = createInsertSchema(artworks);
 
 export async function createArtwork(artwork: any) {
@@ -167,6 +155,10 @@ export async function getTagByName (name: string) {
      null
 }
 
+export async function deleteTagJoinsForArtwork(artworkId: number) {
+  await db.delete(artworksToTags).where(eq(artworksToTags.artworkId,artworkId))
+}
+
 export async function deleteArtworkById(id: number) {
   await db.delete(artworks).where(eq(artworks.id, id));
 }
@@ -183,44 +175,4 @@ export async function getTagsForArtwork(artworkId: number) {
   .where(eq(artworks.id, artworkId))
   return rows.map(r => r.tags);
 
-}
-
-export async function getProducts(
-  search: string,
-  offset: number
-): Promise<{
-  products: SelectProduct[];
-  newOffset: number | null;
-  totalProducts: number;
-}> {
-  // Always search the full table, not per page
-  if (search) {
-    return {
-      products: await db
-        .select()
-        .from(products)
-        .where(ilike(products.name, `%${search}%`))
-        .limit(1000),
-      newOffset: null,
-      totalProducts: 0
-    };
-  }
-
-  if (offset === null) {
-    return { products: [], newOffset: null, totalProducts: 0 };
-  }
-
-  let totalProducts = await db.select({ count: count() }).from(products);
-  let moreProducts = await db.select().from(products).limit(5).offset(offset);
-  let newOffset = moreProducts.length >= 5 ? offset + 5 : null;
-
-  return {
-    products: moreProducts,
-    newOffset,
-    totalProducts: totalProducts[0].count
-  };
-}
-
-export async function deleteProductById(id: number) {
-  await db.delete(products).where(eq(products.id, id));
 }
