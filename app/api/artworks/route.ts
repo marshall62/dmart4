@@ -142,6 +142,9 @@ export async function POST(request: Request) {
     console.log("Adding record to db ", rec);
     const artworkIds = await db.insert(artworks).values([rec]).returning({insertedId: artworks.id});
     const artworkId = artworkIds[0].insertedId;
+    const tags = formDataTags(form);
+    if (tags.length > 0)
+      await updateArtworkTags(artworkId, tags);
     return Response.json({
       id: artworkId
     });

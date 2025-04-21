@@ -7,13 +7,6 @@ image operations.   Pro account trial expires 2/21 and then I can revert to hobb
 I reduced the size or the large images so that we take up much less bucket storage.   Hobby account may be viable
 
 
-If uploading a new artwork:
-
-
-Y Posting a new artwork works
-
-DONE: Editing existing artwork: 
-app/api/artworks/route.ts PATCH is able to update artwork
 
 - Test create, update, delete of artwork.  If working, merge add-tags branch into main branch
 - Build a login page and make sure that all the admin pages are only accessible when logged in
