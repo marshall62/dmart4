@@ -22,6 +22,11 @@ export const db = drizzle(neon(process.env.POSTGRES_URL!));
 
 export const statusEnum = pgEnum('status', ['active', 'inactive', 'archived']);
 
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  pw: text('pw').notNull(),
+}
+);
 export const artworks = pgTable('artworks', {
   id: serial('id').primaryKey(),
   image_url: text('image_url'),
@@ -175,4 +180,9 @@ export async function getTagsForArtwork(artworkId: number) {
   .where(eq(artworks.id, artworkId))
   return rows.map(r => r.tags);
 
+}
+
+export async function getUserHash(id: number): Promise<string> {
+  const rows = await db.select({pw: users.pw}).from(users).where(eq(users.id, id));
+  return rows[0].pw;
 }
