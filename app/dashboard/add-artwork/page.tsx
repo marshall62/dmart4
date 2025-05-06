@@ -94,6 +94,10 @@ export default function AddArtwork () {
       router.push('/dashboard'); // go back to the dashboard
     };
 
+    const navigateToLoginPage = () => {
+        router.push('/login'); // go back to the dashboard
+    };
+
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -216,7 +220,12 @@ export default function AddArtwork () {
             response = await updateArtwork();
         }
         const result = await response.json();
-        navigateToServerPage();
+        if (response.status == 200) {
+            navigateToServerPage();
+        }
+        else if (response.status == 401) {
+            navigateToLoginPage()
+        }
            
     };
 

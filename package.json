@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.3",
+    "@oslojs/crypto": "^1.0.1",
+    "@oslojs/encoding": "^1.1.0",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.1",
     "@vercel/blob": "^0.26.0",

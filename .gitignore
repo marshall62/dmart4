@@ -49,3 +49,5 @@ thumbnail_images
 /images/venv/*
 
 github personal token.txt
+/passwd/passwd.js
+/secrets/*

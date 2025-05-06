@@ -45,10 +45,16 @@ export function Artwork({ artwork }: { artwork: SelectArtwork }) {
           <Link href={editLink}><Image width="25" height="25" alt="Edit" src="/icons8-pencil-50.png"/></Link>
           <Link href="#" onClick={async () => {
             if (confirm("Are you sure?")) {
-              await fetch('/api/artworks?id=' + artwork.id, {
+              const response = await fetch('/api/artworks?id=' + artwork.id, {
                 method: 'DELETE',
               });
-              router.refresh(); // current page is reloaded so that deleted item gone
+              if (response.ok) {
+                router.refresh(); // current page is reloaded so that deleted item gone
+              }
+              else if (response.status === 401) {
+                alert("Not authorized");
+                router.push('/login');
+              }
             }
           }
           }>

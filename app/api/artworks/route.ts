@@ -1,3 +1,4 @@
+import { checkCookieHeader } from "@/lib/auth";
 import { artworks, db, deleteArtworkById, deleteTagJoinsForArtwork, getArtwork, getArtworks, 
   SelectArtwork, updateArtwork, updateArtworkTags } from "@/lib/db";
 import { list, head, del, put, ListBlobResult, HeadBlobResult } from '@vercel/blob';
@@ -65,6 +66,10 @@ function formDataToRecord (formData) {
 }
 
 export async function PATCH(request: Request) {
+  const checkResult = await checkCookieHeader(request);
+  if (!checkResult) {
+    return Response.json({error: "Not authorized"}, {status: 401});
+  }
   const form = await request.formData();
   const artId = parseInt(form.get('id') as string);
   form.delete('id');
@@ -101,6 +106,10 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const checkResult = await checkCookieHeader(request);
+  if (!checkResult) {
+    return Response.json({error: "Not authorized"}, {status: 401});
+  }
   const form = await request.formData();
   let file = form.has('imageFile') ? form.get('imageFile') as File : null;
   const thumbnail = form.has('thumbnailFile') ? form.get('thumbnailFile') as File : null;
@@ -167,6 +176,10 @@ async function deleteBlob (url: string) {
 }
 
 export async function DELETE(request: Request) {
+  const checkResult = await checkCookieHeader(request);
+  if (!checkResult) {
+    return Response.json({error: "Not authorized"}, {status: 401});
+  }
   const urlParams = new URLSearchParams(new URL(request.url).search);
   const artworkId = urlParams.get('id') as string;
   const id = parseInt(artworkId);

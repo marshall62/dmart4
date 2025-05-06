@@ -16,6 +16,10 @@ import {
 } from 'drizzle-orm/pg-core';
 import { count, eq, ilike, relations } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
+import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
+import { sha256 } from "@oslojs/crypto/sha2";
+import { validateSessionToken } from './auth';
+import { cookies } from 'next/headers';
 
 
 export const db = drizzle(neon(process.env.POSTGRES_URL!));
@@ -25,8 +29,22 @@ export const statusEnum = pgEnum('status', ['active', 'inactive', 'archived']);
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   pw: text('pw').notNull(),
-}
-);
+});
+
+export const session = pgTable("session", {
+	id: text("id").primaryKey(),
+	userId: integer("user_id")
+		.notNull()
+		.references(() => users.id),
+	expiresAt: timestamp("expires_at", {
+		withTimezone: true,
+		mode: "date"
+	}).notNull()
+});
+
+export type SelectUser = typeof users.$inferSelect;
+export type SelectSession = typeof session.$inferSelect;
+
 export const artworks = pgTable('artworks', {
   id: serial('id').primaryKey(),
   image_url: text('image_url'),
@@ -92,6 +110,22 @@ export type SelectArtwork = typeof artworks.$inferSelect;
 //   artwork_id: integer('name').primaryKey()
 // })
 
+export const SESSION_LENGTH_DAYS = 7;
+
+/** based on lucia auth 
+ * https://lucia-auth.com/sessions/basic-api/drizzle-orm
+ */
+export async function createSession(token: string, userId: number): Promise<SelectSession> {
+	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
+	const sess: SelectSession = {
+		id: sessionId,
+		userId,
+		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * SESSION_LENGTH_DAYS),
+	};
+	await db.insert(session).values(sess);
+	return sess;
+}
+
 export const insertArtworksSchema = createInsertSchema(artworks);
 
 export async function createArtwork(artwork: any) {
@@ -102,6 +136,15 @@ export async function createArtwork(artwork: any) {
 
 export async function getArtworks(): Promise<SelectArtwork[]> {
   return await db.select().from(artworks).orderBy(artworks.id);
+}
+
+export async function getSession(): Promise<SelectSession | null> {
+  console.log("getting session");
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session_token')?.value;
+  console.log("token", token);
+  const {session} = await validateSessionToken(token);
+  return session
 }
 
 export async function getArtwork(id: number): Promise<SelectArtwork> {

@@ -1,5 +1,30 @@
-import { getUserHash } from "@/lib/db";
+import { generateSessionToken } from "@/lib/auth";
+import { createSession, getUserHash } from "@/lib/db";
 import bcrypt from 'bcrypt';
+
+function setSessionTokenCookie  (token: string) {
+    const cookie = `session_token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict`;
+    // Set the cookie in the response headers
+    // Return a response with both the cookie in the header and a JSON body
+    return new Response(
+        JSON.stringify({
+        message: 'Login successful',
+        token: token, // Include the token in the JSON response
+        }),
+        {
+        status: 200,
+        headers: {
+            'Content-Type': 'application/json',
+            'Set-Cookie': cookie, // Set the cookie in the response header
+        },
+        }
+    );
+}
+
+export function deleteSessionTokenCookie(response: HTTPResponse): void {
+	// When deployed over HTTP (localhost)
+	response.headers.add("Set-Cookie", "session=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/");
+}
 
 export async function POST(req: Request) {
     const data =  await req.json()
@@ -9,11 +34,10 @@ export async function POST(req: Request) {
     const match = await verifyPassword(password, h)
       // Replace with your actual authentication logic (e.g., database check)
       if (match) {
-        // Successful login
-        return Response.json({
-            message: 'Login successful',
-            token: 'your-generated-token',
-          });
+        const sessTok = generateSessionToken();
+        const sess = await createSession(sessTok, 1)
+        return setSessionTokenCookie(sessTok)
+
       } 
       else {
         // Invalid credentials

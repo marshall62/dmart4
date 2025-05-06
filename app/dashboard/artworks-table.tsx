@@ -21,6 +21,7 @@ import { SelectArtwork } from '@/lib/db';
 import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export function ArtworksTable({
   artworks,
@@ -49,10 +50,15 @@ export function ArtworksTable({
       <CardHeader>
         <CardTitle>Artworks</CardTitle>
         <CardDescription>
-          Manage your products and view their sales performance.
+          Manage My Art
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="flex justify-end">
+          <Button variant="outline" asChild>
+            <Link href="dashboard/add-artwork">Add art</Link>
+          </Button>
+        </div>
         <Table>
           <TableHeader>
             <TableRow>
@@ -83,6 +89,11 @@ export function ArtworksTable({
             ))}
           </TableBody>
         </Table>
+        <div className='flex justify-end'>
+          <Button variant="outline" asChild>
+            <Link href="dashboard/add-artwork">Add art</Link>
+          </Button>
+        </div>
       </CardContent>
       <CardFooter>
         <form className="flex items-center w-full justify-between">

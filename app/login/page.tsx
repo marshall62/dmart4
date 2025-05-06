@@ -1,11 +1,13 @@
 'use client';
 import { useState } from 'react';
 import styles from './LoginPage.module.css'; // Assuming you have a CSS module for styling
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -31,9 +33,10 @@ export default function LoginPage() {
       if (response.ok) {
         // Authentication successful, redirect to dashboard or store token
         // Example:
-        // router.push('/dashboard');
+        
         console.log('Login successful:', data);
         setError('');
+        router.push('/dashboard');
       } else {
         // Authentication failed, display error message
         setError(data.message || 'Invalid credentials');
