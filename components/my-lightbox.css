@@ -1,0 +1,8 @@
+.image-gallery-description {
+    position: initial !important;
+    display: block;
+    width: 100%;
+  }   
+  .image-gallery-image {
+    max-height: calc(100vh - 80px) !important;
+  }

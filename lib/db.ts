@@ -14,7 +14,7 @@ import {
   serial,
   primaryKey
 } from 'drizzle-orm/pg-core';
-import { count, eq, ilike, relations } from 'drizzle-orm';
+import { or, eq, ilike, relations, gte } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
@@ -138,6 +138,35 @@ export async function getArtworks(): Promise<SelectArtwork[]> {
   return await db.select().from(artworks).orderBy(artworks.id);
 }
 
+export async function getArtworksInCategory(category: string): Promise<SelectArtwork[]> {
+  console.log("getting artworks in category", category);
+  const rows = await db.select().from(artworks).where(eq(artworks.category_name, category)).orderBy(artworks.id);
+  return rows;
+}
+
+export async function getArtworksThatMatch(searchTerm: string): Promise<SelectArtwork[]> {
+  const rows = await db.select().from(artworks).where(
+    or(
+      ilike(artworks.title, `%${searchTerm}%`),
+      ilike(artworks.media, `%${searchTerm}%`),
+      ilike(artworks.category_name, `%${searchTerm}%`)
+    )
+  ).orderBy(artworks.id);
+  const taggedArtworks = await getArtworksWithLabel(searchTerm);
+  return rows.concat(taggedArtworks);
+}
+
+export async function getArtworksAfterDate(year: number): Promise<SelectArtwork[]> {
+  return await db.select().from(artworks).where(gte(artworks.year, year)).orderBy(artworks.id);
+}
+
+export async function getArtworksWithLabel(label: string): Promise<SelectArtwork[]> {
+  const rows = await db.select().from(artworksToTags).leftJoin(tags, eq(artworksToTags.tagId, tags.id))
+  .leftJoin(artworks, eq(artworksToTags.artworkId, artworks.id))
+  .where(eq(tags.name, label))
+  return rows.map(r => r.artworks);
+}
+
 export async function getSession(): Promise<SelectSession | null> {
   console.log("getting session");
   const cookieStore = await cookies();
@@ -214,6 +243,8 @@ export async function deleteArtworkById(id: number) {
 export async function getAllTags() {
   return await db.select().from(tags).orderBy(tags.id);
 }
+
+
 
 export async function getTagsForArtwork(artworkId: number) {
   const rows = await db.select()

@@ -1,0 +1,32 @@
+
+
+.caption > a {
+  margin-top: 5px;
+  color: rgb(10, 10, 10);
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 48vw 48vw;
+  grid-template-rows: 25vh 25vh 25vh;
+  gap: 4vh 2vw;
+  margin-left: 2vw;
+
+}
+
+.gridItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.gridItem > img {
+  max-width: 100%;
+  max-height: 100%; 
+  object-fit: cover;
+  cursor: pointer;
+}

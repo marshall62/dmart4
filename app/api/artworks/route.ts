@@ -1,5 +1,9 @@
 import { checkCookieHeader } from "@/lib/auth";
 import { artworks, db, deleteArtworkById, deleteTagJoinsForArtwork, getArtwork, getArtworks, 
+  getArtworksAfterDate, 
+  getArtworksInCategory, 
+  getArtworksThatMatch, 
+  getArtworksWithLabel, 
   SelectArtwork, updateArtwork, updateArtworkTags } from "@/lib/db";
 import { list, head, del, put, ListBlobResult, HeadBlobResult } from '@vercel/blob';
 
@@ -162,11 +166,50 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
     const urlParams = new URLSearchParams(new URL(request.url).search);
     const id = urlParams.get('id')
+    const isForRecentWork = urlParams.get('recent') === 'true';
+    const isForExemplars = urlParams.get('exemplars') === 'true';
+    const searchTerm = urlParams.get('search');
+    const category = urlParams.get('category');
+    const tag = urlParams.get('tag');
     if (id) {
         console.log("looking for artwork", id);
         const artwork = await getArtwork(parseInt(id));
         console.log("found it", artwork);
         return Response.json(artwork);
+    }
+    else if (searchTerm) {
+      console.log("looking for artwork with search term", searchTerm);
+      const artworks = await getArtworksThatMatch(searchTerm);
+      console.log("found them", artworks);
+      return Response.json(artworks);
+    }
+    else if (tag) {
+      console.log("looking for artworks with tag", tag);
+      const artworks = await getArtworksWithLabel(tag);
+      console.log("found them", artworks);
+      return Response.json(artworks);
+    }
+    else if (category) {
+      const artworks = await getArtworksInCategory(category);
+      console.log("found them", artworks);
+      return Response.json(artworks);
+    }
+    else if (isForRecentWork) {
+      const artworks = await getArtworksAfterDate(2020);
+      console.log("found them", artworks);
+      return Response.json(artworks);
+    }
+    else if (isForExemplars) {
+      console.log("looking for exemplars");
+      const artworks = await getArtworksWithLabel('exemplar');
+      console.log("found them", artworks);
+      return Response.json(artworks);
+    }
+    else {
+        console.log("looking for all artworks");
+        const artworks = await getArtworks();
+        console.log("found them", artworks);
+        return Response.json(artworks);
     }
 }
 
