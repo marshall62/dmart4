@@ -26,7 +26,7 @@ export default function Home() {
   return (
     <div className={styles.homeImageContainer}>
       {artwork && 
-      <img alt="home" className={styles.homeImage} src={artwork.midsize_image_url}/>
+      <img alt="home" className={`${styles.homeImage} ml-4`} src={artwork.midsize_image_url}/>
 }
     </div>
   );
