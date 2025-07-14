@@ -14,7 +14,7 @@ import {
   serial,
   primaryKey
 } from 'drizzle-orm/pg-core';
-import { or, eq, ilike, relations, gte } from 'drizzle-orm';
+import { or, eq, ilike, relations, gte, and } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
@@ -134,22 +134,33 @@ export async function createArtwork(artwork: any) {
   return artworkId;
 }
 
+export async function getActiveArtworks(): Promise<SelectArtwork[]> {
+  return await db.select().from(artworks).where(eq(artworks.is_active, true)).orderBy(artworks.id);
+}
+
 export async function getArtworks(): Promise<SelectArtwork[]> {
   return await db.select().from(artworks).orderBy(artworks.id);
 }
 
 export async function getArtworksInCategory(category: string): Promise<SelectArtwork[]> {
   console.log("getting artworks in category", category);
-  const rows = await db.select().from(artworks).where(eq(artworks.category_name, category)).orderBy(artworks.id);
+  const rows = await db.select().from(artworks).where(
+    and(
+      eq(artworks.is_active, true),
+      eq(artworks.category_name, category)))
+    .orderBy(artworks.id);
   return rows;
 }
 
 export async function getArtworksThatMatch(searchTerm: string): Promise<SelectArtwork[]> {
   const rows = await db.select().from(artworks).where(
-    or(
-      ilike(artworks.title, `%${searchTerm}%`),
-      ilike(artworks.media, `%${searchTerm}%`),
-      ilike(artworks.category_name, `%${searchTerm}%`)
+    and(
+      eq(artworks.is_active, true),
+      or(
+        ilike(artworks.title, `%${searchTerm}%`),
+        ilike(artworks.media, `%${searchTerm}%`),
+        ilike(artworks.category_name, `%${searchTerm}%`)
+      )
     )
   ).orderBy(artworks.id);
   const taggedArtworks = await getArtworksWithLabel(searchTerm);
@@ -157,13 +168,22 @@ export async function getArtworksThatMatch(searchTerm: string): Promise<SelectAr
 }
 
 export async function getArtworksAfterDate(year: number): Promise<SelectArtwork[]> {
-  return await db.select().from(artworks).where(gte(artworks.year, year)).orderBy(artworks.id);
+  return await db.select().from(artworks)
+    .where(
+      and(
+        eq(artworks.is_active, true),
+        gte(artworks.year, year)
+      )
+      ).orderBy(artworks.id);
 }
 
-export async function getArtworksWithLabel(label: string): Promise<SelectArtwork[]> {
+export async function getArtworksWithLabel(label: string): Promise<any[]> {
   const rows = await db.select().from(artworksToTags).leftJoin(tags, eq(artworksToTags.tagId, tags.id))
   .leftJoin(artworks, eq(artworksToTags.artworkId, artworks.id))
-  .where(eq(tags.name, label))
+  .where(
+    and(
+      eq(artworks.is_active, true),
+      eq(tags.name, label)))
   return rows.map(r => r.artworks);
 }
 
@@ -172,6 +192,10 @@ export async function getSession(): Promise<SelectSession | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('session_token')?.value;
   console.log("token", token);
+  if (!token) {
+    console.log("no token found");
+    return null;
+  }
   const {session} = await validateSessionToken(token);
   return session
 }
@@ -186,11 +210,11 @@ export async function getArtworkByImageUrl(url: string): Promise<SelectArtwork> 
   return rows[0];
 }
 
-export async function updateArtwork (id: number, data) {
+export async function updateArtwork (id: number, data: Partial<SelectArtwork>) {
   await db.update(artworks).set(data).where(eq(artworks.id, id));
 }
 
-export async function createTag (name: string): tags {
+export async function createTag (name: string): Promise<number> {
   const tagIds = await db.insert(tags).values({name}).returning({insertedId: tags.id})
   const tagId = tagIds[0].insertedId;
   return tagId;

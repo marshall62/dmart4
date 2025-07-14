@@ -21,11 +21,6 @@ function setSessionTokenCookie  (token: string) {
     );
 }
 
-export function deleteSessionTokenCookie(response: HTTPResponse): void {
-	// When deployed over HTTP (localhost)
-	response.headers.add("Set-Cookie", "session=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/");
-}
-
 export async function POST(req: Request) {
     const data =  await req.json()
     const username:string = data.username;

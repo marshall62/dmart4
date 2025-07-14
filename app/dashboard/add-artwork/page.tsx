@@ -1,9 +1,9 @@
 "use client"
-import Form from 'next/form'
 import { Jimp } from "jimp";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react'
-import { ReactTags } from 'react-tag-autocomplete'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { SelectArtwork } from '@/lib/db';
+import { log } from "console";
 
 type Artwork = {
     id?: number | null;
@@ -20,31 +20,32 @@ type Artwork = {
     midsizeFile?: Blob | null
 }
 
+type ExistingArtwork = Omit<SelectArtwork, 'id'> & { id: number };
+
 
 export default function AddArtwork () {
 
-    const [formData, setFormData] = useState<Artwork>({});
+    const formDataRef = useRef<FormData>(new FormData());
     const [thumbnail, setThumbnail] = useState<string | null>(null);
-    const [imageFile, setImageFile] = useState(null);
-    const [beforeEditedValues, setBeforeEditedValues] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", imageFile:null, filename:""});
-    const [artwork, setArtwork] = useState({id: "", title: "", year:"", price:"", width:"", height:"", media:"", category_name:"", 
-        imageFile:null, thumbnailFile:null, midsizeFile: null, filename:""});
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [artwork, setArtwork] = useState<SelectArtwork | null>(null);
     const searchParams = useSearchParams();
     const id = searchParams.get('id')
     const router = useRouter();
     const [selectedTags, setSelectedTags] = useState<string[]>([])
     const [tags, setTags] = useState<string>()
+    const [isActive, setIsActive] = useState<boolean>(true);
     const [suggestedTags, setSuggestedTags] = useState([])
 
     const onAdd = useCallback(
-      (newTag) => {
+      (newTag:string) => {
         setSelectedTags([...selectedTags, newTag])
       },
       [selectedTags]
     )
   
     const onDelete = useCallback(
-      (tagIndex) => {
+      (tagIndex:number) => {
         setSelectedTags(selectedTags.filter((_, i) => i !== tagIndex))
       },
       [selectedTags]
@@ -61,27 +62,23 @@ export default function AddArtwork () {
             setSelectedTags(artworkTags);
             let tagsCsv = "";
             if (artworkTags) {
-                artworkTags.forEach(t => {
+                artworkTags.forEach((t:string) => {
                     tagsCsv += t + ",";
                 });
                 setTags(tagsCsv.slice(0,-1));
             }
         }
-
-        doLoad().catch(console.log);
+        if (id) {
+            doLoad().catch(console.log);
+        }
     }, [id])
 
     useEffect( () => {
         const doLoad = async () => {
            const x =  await fetch('/api/artworks?id=' + id);
-           const aw = await x.json()
-           for (const [k,v] of Object.entries(aw)) {
-            if (v === null) {
-                aw[k] = "";
-            }
-           }
-           setBeforeEditedValues({...aw, id: parseInt(id)});
+           const aw: SelectArtwork = await x.json()
            setArtwork(aw);
+           setIsActive(aw.is_active ?? true);
            setSelectedTags([])
            setThumbnail(aw.thumbnail_image_url)
         }
@@ -99,14 +96,19 @@ export default function AddArtwork () {
     };
 
 
-    const handleChange = (event) => {
+    type HandleChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLSelectElement>;
+
+    const handleChange = (event: HandleChangeEvent): void => {
         const { name, value } = event.target;
-        setArtwork((prevArtwork) => ({ ...prevArtwork, [name]: value}))
-        //setFormData((prevFormData) => ({ ...prevFormData, [name]: value }));
-      };
+        setArtwork((prevArtwork) => ({ 
+            ...prevArtwork, 
+            [name]: value 
+        } as SelectArtwork));
+        formDataRef.current.set(name, value);
+    };
 
     
-    const handleAddTag = (event) => {
+    const handleAddTag = (event: any) => {
         event.preventDefault();
         const tagsCsv: string = event.target.value;
         setTags(tagsCsv)
@@ -115,7 +117,7 @@ export default function AddArtwork () {
     
     const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
-        const file:File = files[0] as File;
+        const file = files ? files[0] : null;
         if (!file) {
             return;
         }
@@ -146,59 +148,44 @@ export default function AddArtwork () {
           const largeImageFile = new Blob([resized_large_image_buf], { type: 'image/jpeg' });
           const thumbnailFile = new Blob([upload_thumb], { type: 'image/jpeg' })
           const midsizeFile = new Blob([resized_mid_image_buf], { type: 'image/jpeg' })
-          setArtwork((prevArtwork:Artwork) => ({...prevArtwork, filename: file.name, thumbnailFile, 
-            imageFile: largeImageFile, midsizeFile}))
+          if (artwork) {
+            setArtwork((prevArtwork) => ({...prevArtwork!, filename: file!.name}));
+            // When a file is selected clear the URLs so they
+            // dont continue to show the old artwork's URLs
+            artwork.image_url = '';
+            artwork.midsize_image_url = '';
+            artwork.thumbnail_image_url = '';
+          }
 
-        };
+          formDataRef.current.set('filename', file.name)
+          formDataRef.current.set('imageFile', largeImageFile)
+          formDataRef.current.set('thumbnailFile',thumbnailFile)
+          formDataRef.current.set('midsizeFile', midsizeFile)
+        }
         reader.readAsArrayBuffer(file);
         setImageFile(file);
     }
 
-    const createArtwork = async () => {
-        const fd = new FormData();
-        for (let field in artwork) {
-            fd.append(field, artwork[field])
-        }
+    const createArtwork = async (): Promise<Response> => {
+        
         const tags = tagsToList()
-        tags.forEach(tag => fd.append('tags', tag));
-        // imageFile only set if a file is chosen by input
-        if (!imageFile) {
-            fd.delete('imageFile')
-            fd.delete('thumbnailFile')
-            fd.delete('midsizeFile')
-        }
+        tags.forEach(tag => formDataRef.current.append('tags', tag));
+
         const response = await fetch('/api/artworks', {
             method: 'POST',
-            body: fd,
+            body: formDataRef.current,
             }); 
         return response;
     }
 
-    const updateArtwork = async () => {
-        const fd = new FormData();
-        // only include fields that have changed from their original setting
-        for (let field in artwork) {
-            if (imageFile) {
-                // needs to be in patch even if the filename is the same as before
-                // n.b. it won't be put in if no file has been selected
-                fd.set('filename',artwork['filename'])
-            }
-            if (artwork[field] !== beforeEditedValues[field]) {
-                fd.set(field,artwork[field])
-            }
-        }
+    const updateArtwork = async (): Promise<Response> => {
         const taglist = tagsToList()
-        taglist.forEach(tag => fd.append('tags', tag));
-        fd.set('id', beforeEditedValues['id']);
-        // imageFile is only set if one was chosen
-        if (!imageFile) {
-            fd.delete('imageFile')
-            fd.delete('thumbnailFile')
-            fd.delete('midsizeFile')
-        }
+        taglist.forEach(tag => formDataRef.current.append('tags', tag));
+        formDataRef.current.append('id', `${artwork!.id}`);
+        console.log("Patch data is ", formDataRef.current.get('is_active'))
         const response = await fetch('/api/artworks', {
             method: 'PATCH',
-            body: fd,
+            body: formDataRef.current,
             });
         return response;
     }
@@ -210,10 +197,10 @@ export default function AddArtwork () {
         return selected;
     }
 
-    const handleSubmit = async (event) => {
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         let response;
-        if (!artwork.id) {
+        if (!artwork?.id) {
             response = await createArtwork();
         }
         else {
@@ -229,16 +216,39 @@ export default function AddArtwork () {
            
     };
 
+    // toggle the is_active value based on the artwork or else the formDataRef
+    const updateIsActive = () => {
+        let curValue = artwork && artwork.is_active;
+        if (formDataRef.current.has('is_active')) {   
+            curValue = formDataRef.current.get('is_active') === 'true';
+        }
+        setIsActive(!curValue);
+        formDataRef.current.set('is_active', `${!curValue}`);
+    }
+
+    function checkActive(): boolean {
+        let res = false;
+        if (formDataRef.current.has('is_active')) {
+            res = formDataRef.current.get('is_active') === 'true';
+        }
+        else if (artwork ) {
+            res = artwork.is_active ?? false;
+        }
+        else res = true;
+        return res;
+    }
+
+
     return (<div className="ml-4"> 
         <p className="font-bold">
             Provide details of the artwork
         </p>
         <form className="mt-6" onSubmit={handleSubmit}>
-            <input type="hidden" name="id" value={artwork['id']}/>
+            <input type="hidden" name="id" value={artwork?.id ?? undefined}/>
             <div className="mb-5">
                 <label htmlFor="title"className=' bold mb-3'>Title</label>
                 <input className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-9/12 block" 
-                id="title" value={artwork['title']} name="title"  type="text" onChange={handleChange}></input>
+                id="title" value={artwork?.title ?? ''} name="title"  type="text" onChange={handleChange}></input>
             </div>
             
             <div className="flex">
@@ -247,23 +257,30 @@ export default function AddArtwork () {
                         <label htmlFor="year"className=' bold mb-3'>Year</label>
                         <input 
                             className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block" 
-                            id="year" name="year" value={artwork['year']} type="text" 
+                            id="year" name="year" value={artwork?.year ?? ''} type="text" 
                             onChange={handleChange}></input>
                     </div>
                     <div className="mb-5">
                         <label htmlFor="width"className=' bold mb-3'>Width</label>
                         <input className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block" id="width" 
-                        name="width" value={artwork['width']} type="text" onChange={handleChange}></input>
+                        name="width" value={artwork?.width ?? ''} type="text" onChange={handleChange}></input>
                     </div>
                     <div className="mb-5">
                         <label htmlFor="title"className=' bold mb-3'>Height</label>
                         <input className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block" id="height" 
-                        name="height" value={artwork['height']} type="text" onChange={handleChange}></input>
+                        name="height" value={artwork?.height ?? ''} type="text" onChange={handleChange}></input>
                     </div>
                     <div className="mb-5">
                         <label htmlFor="price"className=' bold mb-3'>Price</label>
                         <input className="rounded border-solid border border-gray-800 shadow-lg px-5 py-2 w-half block" id="price" 
-                        name="price" value={ artwork['price']} type="text" onChange={handleChange}></input>
+                        name="price" value={ artwork?.price ?? ''} type="text" onChange={handleChange}></input>
+                    </div>
+                    <div className="mb-5">
+                        <label htmlFor="active"className=' bold mb-3'>Active</label>
+                        <input className="form-checkbox h-5 w-5 text-blue-600 transition duration-150 ease-in-out" id="active" 
+                            name="is_active" type="checkbox" checked={checkActive()}
+                            onChange={updateIsActive}>
+                        </input>
                     </div>
                     
                 </div>
@@ -271,36 +288,39 @@ export default function AddArtwork () {
                     <label className="block" htmlFor="fileInput">Image file</label>
                     <input id="fileInput" onChange={handleImageFileChange} value="" name="imageFile" type="file"></input>
                     {thumbnail ?
-                        <div className="mt-4">{artwork.filename} <img src={thumbnail} /></div> : <div/>}
+                        <div className="mt-4">{imageFile ? imageFile.name : artwork!.filename} 
+                        <img src={thumbnail} /></div> : <div/>}
                 </div>
-                <div className="">
+                {artwork &&
+                    <div className="">
                         <label htmlFor="urls"className=' bold mb-3'>URLs</label>
                         <div id="urls">
                             <span><b>Large Image:</b> 
-                            <a target="_blank" href={artwork.image_url} 
+                            <a target="_blank" href={artwork.image_url ?? ''} 
                             className="underline text-blue-600 text-sm hover:text-blue-800 visited:text-purple-600">
-                                {artwork.image_url}
+                                {artwork?.image_url ?? ''}
                             </a></span>
                         </div>
                         <div className="mt-2">
                             <span><b>Midsize Image:</b> 
-                            <a target="_blank" href={artwork.midsize_image_url} 
+                            <a target="_blank" href={artwork.midsize_image_url ?? ''} 
                             className="underline text-blue-600 text-sm hover:text-blue-800 visited:text-purple-600">
-                            {artwork.midsize_image_url}</a></span>
+                            {artwork.midsize_image_url ?? ''}</a></span>
                         </div>
                         <div className="mt-2">
                             <span><b>Thumbnail Image:</b> 
-                            <a target="_blank" href={artwork.thumbnail_image_url} 
+                            <a target="_blank" href={artwork.thumbnail_image_url ?? ''} 
                             className="underline text-blue-600 text-sm hover:text-blue-800 visited:text-purple-600">
                             {artwork.thumbnail_image_url}</a></span>
                         </div>
                     </div>
+                }
             </div>
             <div className="flex">
             
                 <div className="mb-5">
                     <label htmlFor="media"className=' bold mb-3'>Media</label>
-                    <select name="media" className="ml-5 border border-2 border-solid" value={artwork['media']} onChange={handleChange}>
+                    <select name="media" className="ml-5 border border-2 border-solid" value={artwork?.media ?? ''} onChange={handleChange}>
                         <option>Select One</option>
                         <option value="oil on canvas">oil on canvas</option>
                         <option value="oil on paper">oil on paper</option>
@@ -312,7 +332,7 @@ export default function AddArtwork () {
                 </div>
                 <div className="ml-5 mb-5">
                     <label htmlFor="category_name" className=' bold mb-3'>Category</label>
-                    <select name="category_name" className="ml-5 border border-2 border-solid" value={artwork['category_name']} onChange={handleChange}> 
+                    <select name="category_name" className="ml-5 border border-2 border-solid" value={artwork?.category_name ?? ''} onChange={handleChange}> 
                         <option>Select One</option>
                         <option value="Portrait">Portrait</option>
                         <option value="Landscape">Landscape</option>

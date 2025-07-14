@@ -132,16 +132,19 @@ async function deleteBlob (url: string) {
 // }
 
 // Upload a new image to an existing artwork that has images set.
-export async function PATCH(request) {
+export async function PATCH(request: Request) {
     const form = await request.formData();
     const file = form.get('file') as File;
     const blobFilename = file.name; // if using some kind of client-side image resizer, it will be be a nameless blob
-    const size: imageSize = form.get('size')
+    const size = form.get('size') as imageSize;
+    if (!size || !["large", "midsize", "thumbnail"].includes(size)) {
+        throw new Error("Invalid or missing size parameter");
+    }
     let filename = form.get('filename') as string;
     // prefer the explicitly provided filename if given
     filename = filename || blobFilename;
     const artworkId = form.get('artworkId');
-    const id = parseInt(artworkId);
+    const id = parseInt(artworkId as string);
     const artwork: SelectArtwork = await getArtwork(id);
     
     const field = artworkImageFieldName(size);

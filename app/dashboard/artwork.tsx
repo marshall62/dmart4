@@ -13,6 +13,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 import { useRouter } from 'next/navigation';
+import { SelectArtwork } from '@/lib/db';
 
 
 export function Artwork({ artwork }: { artwork: SelectArtwork }) {
@@ -27,7 +28,7 @@ export function Artwork({ artwork }: { artwork: SelectArtwork }) {
           alt="Artwork image"
           className="aspect-square rounded-md object-cover"
           height="64"
-          src={artwork.thumbnail_image_url}
+          src={artwork?.thumbnail_image_url ?? ''}
           width="64"
         />
       </TableCell>

@@ -2,8 +2,9 @@
 import Image from "next/image";
 import styles from "./Home.module.css";
 import { useEffect, useState } from "react";
+import { SelectArtwork } from "@/lib/db";
 export default function Home() {
-  const [artwork, setArtwork] = useState()
+  const [artwork, setArtwork] = useState<SelectArtwork | undefined>(undefined)
   
   useEffect(() => {
     const fetchArtwork = async () => {
@@ -25,7 +26,7 @@ export default function Home() {
   
   return (
     <div className={styles.homeImageContainer}>
-      {artwork && 
+      {artwork && artwork.midsize_image_url &&
       <img alt="home" className={`${styles.homeImage} ml-4`} src={artwork.midsize_image_url}/>
 }
     </div>

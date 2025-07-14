@@ -1,15 +1,9 @@
-import { File, PlusCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
 import { ArtworksTable } from './artworks-table';
 import { getArtworks, getSession } from '@/lib/db';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-export default async function ArtworksPage({
-  searchParams
-}: {
-  searchParams: { q: string; offset: string };
-}) {
+export default async function ArtworksPage() {
   // Check if the user is logged in
   const session = await getSession();
   if (!session) {
@@ -20,13 +14,11 @@ export default async function ArtworksPage({
     return (  
       <div>
         <div className="flex items-center">
-
-          
         </div>
         <div>
           <ArtworksTable artworks={artworks}/>
         </div>
       </div>
-  );
-}
+    );
+  }
 }

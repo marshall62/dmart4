@@ -65,7 +65,7 @@ export async function invalidateAllSessions(userId: number): Promise<void> {
 export async function checkCookieHeader(request: Request): Promise<boolean> {
   const cookieStore = await cookies();
   const token = cookieStore.get('session_token')?.value;
-  if (token === null) {
+  if (!token) {
     return false;
   }
 

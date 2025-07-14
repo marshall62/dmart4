@@ -1,5 +1,5 @@
 import { checkCookieHeader } from "@/lib/auth";
-import { artworks, db, deleteArtworkById, deleteTagJoinsForArtwork, getArtwork, getArtworks, 
+import { artworks, db, deleteArtworkById, deleteTagJoinsForArtwork, getActiveArtworks, getArtwork, getArtworks, 
   getArtworksAfterDate, 
   getArtworksInCategory, 
   getArtworksThatMatch, 
@@ -14,44 +14,49 @@ async function uploadImage(filename: string, file: any) {
 }
 
 function intOrNull (v:FormDataEntryValue | null): number | null {
-  return v ? parseInt(v) : null;
+  return typeof v === 'string' ? parseInt(v) : null;
 }
 
 function floatOrNull (v:FormDataEntryValue | null): number | null {
-  return v ? parseFloat(v) : null;
+  return typeof v === 'string' ? parseFloat(v) : null;
 }
 
 function strOrNull (v: FormDataEntryValue | null): string | null {
   return v ? v.toString() : null;
 }
-function checkAndAddField(field: string, rec: any, formData) {
+function checkAndAddField(field: string, rec: any, formData:FormData) {
   if (formData.get(field)) rec[field] = formData.get(field)
 }
-function checkAndAddIntField(field: string, rec: any, formData) {
+function checkAndAddIntField(field: string, rec: any, formData:FormData) {
   if (formData.get(field)) rec[field] = intOrNull(formData.get(field))
 }
-function checkAndAddFloatField(field: string, rec: any, formData) {
+function checkAndAddFloatField(field: string, rec: any, formData:FormData) {
   if (formData.get(field)) rec[field] = floatOrNull(formData.get(field))
 }
+function checkAndAddBooleanField(field: string, rec: any, formData:FormData) {
+  if (formData.get(field)) rec[field] = formData.get(field) === 'true'
+}
 
-function formDataToPatchRecord (formData) {
+
+function formDataToPatchRecord (formData: FormData) {
   let rec: any = {};
   checkAndAddField("title", rec, formData)
   checkAndAddIntField("year", rec, formData)
   checkAndAddFloatField("width", rec, formData)
   checkAndAddFloatField("height", rec, formData)
   checkAndAddFloatField("price", rec, formData)
+  checkAndAddBooleanField("is_active", rec, formData)
   checkAndAddField("filename", rec, formData)
   checkAndAddField("media", rec, formData)
   checkAndAddField("category_name", rec, formData)
   return rec;
 }
 
-function formDataTags (formData): string[] {
-  return formData.getAll('tags')
+function formDataTags (formData: FormData): string[] {
+  return formData.getAll('tags').filter((tag) => typeof tag === 'string') as string[];
 }
 
-function formDataToRecord (formData) {
+function formDataToRecord (formData: FormData) {
   let rec: any =   {
     title: formData.get('title'),
     year: intOrNull(formData.get('year')) ,
@@ -75,7 +80,9 @@ export async function PATCH(request: Request) {
     return Response.json({error: "Not authorized"}, {status: 401});
   }
   const form = await request.formData();
+  console.log("Updating artwork with form data", form);
   const artId = parseInt(form.get('id') as string);
+  console.log('id', artId);
   form.delete('id');
   const new_data = formDataToPatchRecord(form);
   const tags = formDataTags(form);
@@ -84,7 +91,9 @@ export async function PATCH(request: Request) {
   const midsize_file = form.has('midsizeFile') ? form.get('midsizeFile') as File : null;
   // if a file is uploaded, delete the old files from the bucket and update the 
   // db with the new metadata and filename
+  console.log("new_data", new_data);
   if ( new_data.filename && file && midsize_file && thumbnail_file) {
+    console.log("Updating artwork with new image files", new_data.filename);
     const artwork = await getArtwork(artId);
     if (artwork.image_url) deleteBlob(artwork.image_url!);
     if (artwork.midsize_image_url) deleteBlob(artwork.midsize_image_url!);
@@ -207,7 +216,7 @@ export async function GET(request: Request) {
     }
     else {
         console.log("looking for all artworks");
-        const artworks = await getArtworks();
+        const artworks = await getActiveArtworks();
         console.log("found them", artworks);
         return Response.json(artworks);
     }

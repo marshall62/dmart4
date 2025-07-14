@@ -6,13 +6,8 @@ is present until I am certain everything works right))
 image operations.   Pro account trial expires 2/21 and then I can revert to hobby or continue with pro.
 I reduced the size or the large images so that we take up much less bucket storage.   Hobby account may be viable
 
-
-
-- Test create, update, delete of artwork.  If working, merge add-tags branch into main branch
-- Build a login page and make sure that all the admin pages are only accessible when logged in
-- See if I can get the main page of the user website to run in this repo accessing the database to create a context
-   with all artworks.
-- begin converting the art webapp to use the Vercel API and the data from postgres
+6/24/25:  Begin the process of deploying this app.
+   - link a project in vercel to the github repo.
 
 Admin:
 _ Setting the tags on artwork with auto complete input

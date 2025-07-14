@@ -9,7 +9,7 @@ const Navbar = () => {
 
   const router = useRouter();
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchTerm.trim()) {
       router.push(`/search?term=${encodeURIComponent(searchTerm)}`);

@@ -30,7 +30,7 @@ export async function GET() {
   let r1 = records[0]
   let title = r1.title;
   // console.log("First record is ", r1)
-  records.forEach(async (r) => {
+  records.forEach(async (r:any) => {
     console.log("record:", r);
     await db.insert(artworks).values(r);
     console.log("done");

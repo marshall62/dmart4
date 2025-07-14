@@ -13,7 +13,7 @@ async function getWork(mongoId: string) {
 
 export async function GET() {
 
-  let record = await getTagsData()
+  let record: Record<string, string[]> = await getTagsData()
   for (const [tag, idList] of Object.entries(record)) {
     const tagIds = await db.insert(tags).values({name: tag}).returning({insertedId: tags.id}); // put tag as a row in tags table
     const tagId = tagIds[0].insertedId;

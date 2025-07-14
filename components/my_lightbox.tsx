@@ -9,8 +9,8 @@ import { Artwork } from "../types/artwork"; // Adjusted path to match the correc
 
 export default function MyLightbox ({artworks}: {artworks: Artwork[]})  {
   const router = useRouter();
-//   const isMobile = useMediaQuery({ maxHeight: 600 });
-  const isMobile = false; // TODO:  I need to figure out how to get the media query working.  I think
+  const isMobile = useMediaQuery({ maxWidth: 767 });
+  // const isMobile = false; // TODO:  I need to figure out how to get the media query working.  I think
 
   console.log('Is this running on the client?', typeof window !== 'undefined');
 
@@ -58,10 +58,9 @@ console.log("isMobile:", isMobile);
 
   // const isPhoneInLandscapeMode = window.matchMedia("(orientation: landscape) and (max-width: 768px)").matches;
   return(
-    <>
-      <ImageGallery className="image-gallery-description" showThumbnails={!isMobile} onSlide={handleSlideChange} showIndex={true} items={images}></ImageGallery>
-     
-    </>
+    <div className="image-gallery-description">
+      <ImageGallery showThumbnails={!isMobile} onSlide={handleSlideChange} showIndex={true} items={images}></ImageGallery>
+    </div>
   )
 
 }

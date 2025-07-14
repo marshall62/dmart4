@@ -26,7 +26,7 @@ function Categories () {
     }
       , []);
 
-  const handleClick = (href) => {
+  const handleClick = (href: string): void => {
     router.push(`/${href}`);
   }
 

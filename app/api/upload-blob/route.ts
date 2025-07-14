@@ -31,7 +31,7 @@ async function uploadImage(filename: string, buffer :any) {
 
 // use localhost:3000/api/upload_images to run this
 
-export async function GET(request) {
+export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const filename = searchParams.get('filename') as string;
     // const filename = "david_marshall_1.jpg";

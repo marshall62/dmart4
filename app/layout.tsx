@@ -1,10 +1,10 @@
 'use client';
-import type { Metadata } from "next";
-import localFont from "next/font/local";
+
 import "./globals.css";
 import Navbar from '@/components/navigation/navbar';
-import { createContext, useEffect, useState } from "react";
-
+import { SelectArtwork } from "@/lib/db";
+import { useEffect, useState } from "react";
+import { GlobalProvider } from "./context/GlobalContext";
 
 
 export default function RootLayout({
@@ -12,8 +12,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [artworks,setArtworks] = useState(null);
-  const GlobalContext = createContext(null);
+  const [artworks, setArtworks] = useState<SelectArtwork[]>([]);
+  // const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
+
+
 
   useEffect (() => {
     const login =  async () => {    
@@ -24,13 +26,17 @@ export default function RootLayout({
           throw new Error("Failed to fetch artworks");
         }
         const artworksJson = await resp.json();
-        const artworks = artworksJson
+        const allArtworks = artworksJson as SelectArtwork[];
         // const artistConfig = await fetch("/api/artist");
         const config = {}
-        setArtworks(artworks);
+        setArtworks(allArtworks);
 
       } catch (err) {
-        console.error("Failed to log in", err.message);     
+        if (err instanceof Error) {
+          console.error("Failed to log in", err.message);
+        } else {
+          console.error("Failed to log in", err);
+        }     
       }
     }
     
@@ -38,16 +44,17 @@ export default function RootLayout({
 
   },[]);
 
+
   return (
     <html>
       <body>
         <div className="container flex flex-col">
           <Navbar/>
-          <GlobalContext.Provider value={{artworks}}> 
+          <GlobalProvider artworks={artworks}> 
           <div className="content">
             {children}
           </div>
-          </GlobalContext.Provider>
+          </GlobalProvider>
         </div>    
     </body>
     </html> 
