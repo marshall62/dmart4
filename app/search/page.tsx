@@ -10,6 +10,7 @@ export default function SearchArtworks() {
 
     useEffect(() => {
         let ignore=false;
+        console.log(ignore)
         const searchTerm = searchParams.get('term');
         async function getArtworks_internal () {
             try {

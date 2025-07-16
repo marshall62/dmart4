@@ -34,8 +34,8 @@ function Categories () {
   return(
     <div className={styles.wrapper}>
   {artworks.map((aw, i) => {
-    let url = aw.midsize_image_url;
-    let categoryHref = `group/${aw.category_name}`;
+    const url = aw.midsize_image_url;
+    const categoryHref = `group/${aw.category_name}`;
       return (<div key={i} className={styles.gridItem}>
       <img alt="an artwork" src={url} onClick={() => handleClick(categoryHref)}/>
       <div className={styles.caption}>

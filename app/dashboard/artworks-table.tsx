@@ -6,7 +6,6 @@ import {
   TableHeader,
   TableBody,
   Table,
-  TableCell
 } from '@/components/ui/table';
 import {
   Card,
@@ -34,8 +33,8 @@ export function ArtworksTable({
 }) {
 
   totalProducts = artworks.length;
-  let router = useRouter();
-  let artworksPerPage = 5;
+  const router = useRouter();
+  const artworksPerPage = 5;
 
   function prevPage() {
     router.back();

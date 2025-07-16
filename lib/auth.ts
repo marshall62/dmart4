@@ -62,14 +62,14 @@ export async function invalidateAllSessions(userId: number): Promise<void> {
 }
 
 
-export async function checkCookieHeader(request: Request): Promise<boolean> {
+export async function checkCookieHeader(): Promise<boolean> {
   const cookieStore = await cookies();
   const token = cookieStore.get('session_token')?.value;
   if (!token) {
     return false;
   }
 
-  const { session, user } = await validateSessionToken(token);
+  const { session } = await validateSessionToken(token);
   if (session === null) {
     return false;
   }

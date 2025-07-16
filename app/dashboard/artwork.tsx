@@ -1,17 +1,7 @@
 import Image from 'next/image';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu';
-import { MoreHorizontal } from 'lucide-react';
+
 import { TableCell, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
-import { revalidatePath } from 'next/cache';
 import { useRouter } from 'next/navigation';
 import { SelectArtwork } from '@/lib/db';
 

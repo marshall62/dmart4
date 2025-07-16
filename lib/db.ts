@@ -16,7 +16,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { or, eq, ilike, relations, gte, and } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
-import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
+import { encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
 import { validateSessionToken } from './auth';
 import { cookies } from 'next/headers';
@@ -128,7 +128,7 @@ export async function createSession(token: string, userId: number): Promise<Sele
 
 export const insertArtworksSchema = createInsertSchema(artworks);
 
-export async function createArtwork(artwork: any) {
+export async function createArtwork(artwork: SelectArtwork) {
   const artworkIds = await db.insert(artworks).values([artwork]).returning({insertedId: artworks.id});
   const artworkId = artworkIds[0].insertedId;
   return artworkId;
@@ -177,14 +177,18 @@ export async function getArtworksAfterDate(year: number): Promise<SelectArtwork[
       ).orderBy(artworks.id);
 }
 
-export async function getArtworksWithLabel(label: string): Promise<any[]> {
+export async function getArtworksWithLabel(label: string): Promise<SelectArtwork[]> {
   const rows = await db.select().from(artworksToTags).leftJoin(tags, eq(artworksToTags.tagId, tags.id))
   .leftJoin(artworks, eq(artworksToTags.artworkId, artworks.id))
   .where(
     and(
       eq(artworks.is_active, true),
       eq(tags.name, label)))
-  return rows.map(r => r.artworks);
+  if (rows){
+    return rows.map(r => r.artworks)
+    .filter((a): a is SelectArtwork => !!a);  // filter out any undefined values
+  }
+  else return []
 }
 
 export async function getSession(): Promise<SelectSession | null> {
@@ -228,8 +232,8 @@ export async function updateArtworkTags (artId: number, tags: string[]) {
   // currently, we delete all the tags of the artwork and then replace
   // them
   await deleteArtworkTags(artId);
-  let artworkTags = [];
-  for (let name of tags) {
+  const artworkTags = [];
+  for (const name of tags) {
     const existing = await getTagByName(name);
     // if theres an existing tag, use it; o/w create a new one
     if (existing) {

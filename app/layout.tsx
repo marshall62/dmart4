@@ -28,7 +28,6 @@ export default function RootLayout({
         const artworksJson = await resp.json();
         const allArtworks = artworksJson as SelectArtwork[];
         // const artistConfig = await fetch("/api/artist");
-        const config = {}
         setArtworks(allArtworks);
 
       } catch (err) {

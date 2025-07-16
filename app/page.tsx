@@ -1,5 +1,4 @@
 'use client';
-import Image from "next/image";
 import styles from "./Home.module.css";
 import { useEffect, useState } from "react";
 import { SelectArtwork } from "@/lib/db";

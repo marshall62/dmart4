@@ -1,7 +1,19 @@
 import fsPromises from 'fs/promises';
 import path from 'path'
 
-export async function getLocalData(): Promise<any> {
+export async function getLocalData(): Promise<{
+  title: string,
+  media: string,
+  price: number,
+  tags: string[],
+  height: number,
+  width: number,
+  year: number,
+  mongo_id: string,
+  image_url: string,
+  category_name: string,
+  is_active: boolean,
+}[]> {
   // Get the path of the json file
   const filePath = path.join(process.cwd(), 'json/artworks.json');
   // Read the json file
@@ -20,7 +32,7 @@ export async function readImageFile (filename:string) {
     return data
 }
 
-export async function getTagsData(): Promise<any> {
+export async function getTagsData(): Promise<{a:string}> {
   // Get the path of the json file
   const filePath = path.join(process.cwd(), 'json/tags.json');
   // Read the json file

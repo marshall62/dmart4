@@ -1,5 +1,5 @@
 import { generateSessionToken } from "@/lib/auth";
-import { createSession, getUserHash } from "@/lib/db";
+import { getUserHash } from "@/lib/db";
 import bcrypt from 'bcrypt';
 
 function setSessionTokenCookie  (token: string) {
@@ -23,14 +23,12 @@ function setSessionTokenCookie  (token: string) {
 
 export async function POST(req: Request) {
     const data =  await req.json()
-    const username:string = data.username;
     const password:string = data.password;
     const h = await getUserHash(1);
     const match = await verifyPassword(password, h)
       // Replace with your actual authentication logic (e.g., database check)
       if (match) {
         const sessTok = generateSessionToken();
-        const sess = await createSession(sessTok, 1)
         return setSessionTokenCookie(sessTok)
 
       } 

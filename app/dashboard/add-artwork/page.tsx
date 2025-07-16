@@ -1,26 +1,8 @@
 "use client"
 import { Jimp } from "jimp";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SelectArtwork } from '@/lib/db';
-import { log } from "console";
-
-type Artwork = {
-    id?: number | null;
-    title?: string | null
-    year?: number | null
-    width?: number | null
-    height?: number | null
-    media?: string | null
-    category_name?: string | null
-    filename?: string | null
-    price?: number | null
-    imageFile?: Blob | null
-    thumbnailFile?: Blob | null
-    midsizeFile?: Blob | null
-}
-
-type ExistingArtwork = Omit<SelectArtwork, 'id'> & { id: number };
 
 
 export default function AddArtwork () {
@@ -32,24 +14,11 @@ export default function AddArtwork () {
     const searchParams = useSearchParams();
     const id = searchParams.get('id')
     const router = useRouter();
-    const [selectedTags, setSelectedTags] = useState<string[]>([])
+    const [, setSelectedTags] = useState<string[]>([])
     const [tags, setTags] = useState<string>()
-    const [isActive, setIsActive] = useState<boolean>(true);
-    const [suggestedTags, setSuggestedTags] = useState([])
+    const [, setIsActive] = useState<boolean>(true);
+    const [, setSuggestedTags] = useState([])
 
-    const onAdd = useCallback(
-      (newTag:string) => {
-        setSelectedTags([...selectedTags, newTag])
-      },
-      [selectedTags]
-    )
-  
-    const onDelete = useCallback(
-      (tagIndex:number) => {
-        setSelectedTags(selectedTags.filter((_, i) => i !== tagIndex))
-      },
-      [selectedTags]
-    )
 
     useEffect( () => {
         const doLoad = async () => {
@@ -108,9 +77,9 @@ export default function AddArtwork () {
     };
 
     
-    const handleAddTag = (event: any) => {
+    const handleAddTag = (event: React.FormEvent<HTMLInputElement>) => {
         event.preventDefault();
-        const tagsCsv: string = event.target.value;
+        const tagsCsv: string = event.currentTarget.value;
         setTags(tagsCsv)
         // setSelectedTags([...selectedTags, event.target.value])
     }
@@ -132,7 +101,7 @@ export default function AddArtwork () {
           }
     
           // create 3 resized images off the original data
-          let image1 = await Jimp.fromBuffer(data);
+          const image1 = await Jimp.fromBuffer(data);
           const image2 = await Jimp.fromBuffer(data);
           const image3 = await Jimp.fromBuffer(data);
           const resized_large_image_buf = await image1
@@ -206,7 +175,7 @@ export default function AddArtwork () {
         else {
             response = await updateArtwork();
         }
-        const result = await response.json();
+        await response.json();
         if (response.status == 200) {
             navigateToServerPage();
         }
@@ -289,7 +258,7 @@ export default function AddArtwork () {
                     <input id="fileInput" onChange={handleImageFileChange} value="" name="imageFile" type="file"></input>
                     {thumbnail ?
                         <div className="mt-4">{imageFile ? imageFile.name : artwork!.filename} 
-                        <img src={thumbnail} /></div> : <div/>}
+                        <img alt="thumbnail" src={thumbnail} /></div> : <div/>}
                 </div>
                 {artwork &&
                     <div className="">

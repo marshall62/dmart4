@@ -1,13 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import MyLightbox from "../../../components/my_lightbox";
-import { useSearchParams } from "next/navigation";
 import { useParams } from "next/navigation";
 
 function GroupArtworks() {
   const [artworks, setArtworks] = useState([]);
   //   const [category, setCategory] = useState(null);
-  const searchParams = useSearchParams();
   const params = useParams();
   const category = params.category;
   const url = "/api/artworks?category=";

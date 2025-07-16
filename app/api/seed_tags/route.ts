@@ -13,7 +13,7 @@ async function getWork(mongoId: string) {
 
 export async function GET() {
 
-  let record: Record<string, string[]> = await getTagsData()
+  const record: Record<string, string[]> = await getTagsData()
   for (const [tag, idList] of Object.entries(record)) {
     const tagIds = await db.insert(tags).values({name: tag}).returning({insertedId: tags.id}); // put tag as a row in tags table
     const tagId = tagIds[0].insertedId;
@@ -28,7 +28,7 @@ export async function GET() {
         console.log(`Inserting join ${tagId} ${typeof(tagId)} ${artworkId} ${typeof(artworkId)}`);
         const rec = {tagId: tagId, artworkId:artworkId}
         console.log("record", rec);
-        const res = await db.insert(artworksToTags).values(rec)
+        await db.insert(artworksToTags).values(rec)
 
     });
     

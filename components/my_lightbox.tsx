@@ -30,7 +30,7 @@ export default function MyLightbox ({artworks}: {artworks: Artwork[]})  {
 
   const images = artworks ? 
     artworks.map(aw => {
-      let z =
+      const z =
         {
           original: aw.image_url,
           fullscreen: aw.midsize_image_url,
