@@ -32,7 +32,7 @@ export async function readImageFile (filename:string) {
     return data
 }
 
-export async function getTagsData(): Promise<{a:string}> {
+export async function getTagsData(): Promise<Record<string, string[]>> {
   // Get the path of the json file
   const filePath = path.join(process.cwd(), 'json/tags.json');
   // Read the json file
@@ -40,5 +40,5 @@ export async function getTagsData(): Promise<{a:string}> {
   // Parse data as json
   const objectData = JSON.parse(jsonData.toString());
 
-  return objectData
+  return objectData as Record<string, string[]>;
 }
