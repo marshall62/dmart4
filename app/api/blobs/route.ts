@@ -54,7 +54,7 @@ export async function GET(request: Request) {
 }
 
 /* Uploads an image file to the vercel blob storage */
-export async function uploadImage(filename: string, file: File) {
+async function uploadImage(filename: string, file: File) {
   const upload = await put(filename, file, { access: "public" });
   return upload;
 }
