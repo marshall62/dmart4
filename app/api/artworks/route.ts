@@ -17,7 +17,7 @@ import {
 import { del, put } from "@vercel/blob";
 
 /* Uploads an image file to the vercel blob storage */
-async function uploadImage(filename: string, file: File) {
+async function uploadImage(filename: string, file: File | ArrayBuffer) {
   const upload = await put(filename, file, {
     access: "public",
     contentType: "image/jpeg",
