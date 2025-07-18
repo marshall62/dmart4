@@ -6,12 +6,12 @@ export const dynamic = 'force-dynamic';
 import { put } from "@vercel/blob";
 
 
-async function uploadImage(filename: string, buffer : Buffer<ArrayBufferLike>) {
-    // const buffer = await readImageToBuffer('david_marshall_1.jpg');
-    const upload = await put(filename, buffer, {access: 'public'});
-    console.log("Upload result", upload);
-    return upload;
-}
+// async function uploadImage(filename: string, buffer : Buffer<ArrayBufferLike>) {
+//     // const buffer = await readImageToBuffer('david_marshall_1.jpg');
+//     const upload = await put(filename, buffer, {access: 'public'});
+//     console.log("Upload result", upload);
+//     return upload;
+// }
 
 
 
@@ -22,7 +22,9 @@ export async function GET(request: Request) {
     const filename = searchParams.get('filename') as string;
     // const filename = "david_marshall_1.jpg";
     const data = await readImageFile(filename);
-    const blobMetadata = await uploadImage(filename, data);
+    // vercel rejects this so I replace with dummy
+    // const blobMetadata = await uploadImage(filename, data);
+    const blobMetadata = {downloadUrl: '', url: '', pathname: ''};
     return Response.json({
         message: ' maybe it got uploaded' ,
         url:  blobMetadata.downloadUrl,
