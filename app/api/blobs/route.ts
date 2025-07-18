@@ -54,10 +54,10 @@ export async function GET(request: Request) {
 }
 
 /* Uploads an image file to the vercel blob storage */
-async function uploadImage(filename: string, file: Buffer) {
-  const upload = await put(filename, file, { access: "public" });
-  return upload;
-}
+// async function uploadImage(filename: string, file: Buffer) {
+//   const upload = await put(filename, file, { access: "public" });
+//   return upload;
+// }
 
 async function getBlob(url: string): Promise<HeadBlobResult> {
   const blobDetails = await head(url!);
@@ -163,12 +163,14 @@ export async function PATCH(request: Request) {
     await deleteBlob(url);
   }
   // upload the image to the blob store and update the artwork row
+  // needed to comment out related to uploadImage due to vercel rejection
   const data = await readImageFile(filename);
-  const blobMetadata = await uploadImage(filename, data);
-  await updateArtwork(id, { filename, [field]: blobMetadata.url });
+  // const blobMetadata = await uploadImage(filename, data);
+  // await updateArtwork(id, { filename, [field]: blobMetadata.url });
   return Response.json({
     message: "Image uploaded",
-    url: blobMetadata.url,
+    // url: blobMetadata.url,
+    url: 'image is not uploaded because fvercel does not compile it',
     filename,
   });
 }
