@@ -190,6 +190,7 @@ export async function POST(request: Request) {
     is_active: true,
     is_sold: false,
     owner: "me",
+    // @ts-expect-error form.get returns FormDataEntryValue which is a union type
     price: floatOrNull(form.get("price")),
   };
   console.log("Adding record to db ", rec);
