@@ -1,7 +1,7 @@
 'use client';
 import MyLightbox from "@/components/my_lightbox";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 export default function SearchArtworks() {
     const [artworks, setArtworks] = useState([]);
@@ -35,8 +35,10 @@ export default function SearchArtworks() {
 
     if (artworks.length > 0) 
         return (
-          <MyLightbox artworks={artworks}/> 
+          <Suspense>
+            <MyLightbox artworks={artworks}/> 
+          </Suspense>
         )
       else
-          return (<div>No results found</div>)
+          return (<Suspense><div>No results found</div></Suspense>)
 }
