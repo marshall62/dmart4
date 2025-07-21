@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -49,21 +49,23 @@ const Navbar = () => {
                 </Link>
               </li>
             </ul>
-            <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-              >
-                Search
-              </button>
-            </form>
+            <Suspense>
+              <form onSubmit={handleSearch} className="hidden md:flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                >
+                  Search
+                </button>
+              </form>
+            </Suspense>
             {/* Mobile Navigation */}
             <div className="md:hidden flex items-center">
               <Button
@@ -118,21 +120,23 @@ const Navbar = () => {
                     </Link>
                   </li>
                   {/* Mobile Search Form */}
-                  <form onSubmit={handleSearch} className="flex flex-col items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                    >
-                      Search
-                    </button>
-                  </form>
+                  <Suspense>
+                    <form onSubmit={handleSearch} className="flex flex-col items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                      >
+                        Search
+                      </button>
+                    </form>
+                  </Suspense>
                 </ul>
               </div>
             )}
