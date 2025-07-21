@@ -33,12 +33,10 @@ export default function SearchArtworks() {
         };
     }, [ searchParams])
 
-    if (artworks.length > 0) 
-        return (
-          <Suspense>
-            <MyLightbox artworks={artworks}/> 
-          </Suspense>
-        )
-      else
-          return (<Suspense><div>No results found</div></Suspense>)
+    return (
+    <Suspense fallback={<div>Loading...</div>}>
+        {(artworks.length > 0) ? <MyLightbox artworks={artworks}/> : <span>No results</span>}
+    </Suspense>
+    )
+
 }
