@@ -26,6 +26,7 @@ export function generateSessionToken(): string {
 }
 
 export async function validateSessionToken(token: string): Promise<SessionValidationResult> {
+	console.log("validating session token", token);
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	const result = await db
 		.select({ user: users, sess: session })
@@ -33,14 +34,17 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 		.innerJoin(users, eq(session.userId, users.id))
 		.where(eq(session.id, sessionId));
 	if (result.length < 1) {
+		console.log("session not found for token", token);
 		return { session: null, user: null };
 	}
 	const { user, sess } = result[0];
 	if (Date.now() >= sess.expiresAt.getTime()) {
+		console.log("session expired", sess);
 		await db.delete(session).where(eq(session.id, sess.id));
 		return { session: null, user: null };
 	}
 	if (Date.now() >= sess.expiresAt.getTime() - 1000 * 60 * 60 * 24 * SESSION_LENGTH_DAYS/2) {
+		console.log("session is about to expire, extending it", sess);
 		sess.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * SESSION_LENGTH_DAYS);
 		await db
 			.update(session)

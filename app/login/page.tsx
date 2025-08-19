@@ -19,7 +19,7 @@ export default function LoginPage() {
     }
 
     try {
-      // Simulate API call for authentication
+      console.log('Attempting to log in with:', { username });
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
@@ -38,7 +38,7 @@ export default function LoginPage() {
         setError('');
         router.push('/dashboard');
       } else {
-        console.log("login unsuccessful:", data);
+        console.log("login unsuccessful", data);
         // Authentication failed, display error message
         setError(data.message || 'Invalid credentials');
       }

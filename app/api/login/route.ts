@@ -1,5 +1,5 @@
 import { generateSessionToken } from "@/lib/auth";
-import { getUserHash } from "@/lib/db";
+import { createSession, getUserHash, insertUserToken } from "@/lib/db";
 import bcrypt from 'bcrypt';
 
 function setSessionTokenCookie  (token: string) {
@@ -27,19 +27,22 @@ export async function POST(req: Request) {
     const h = await getUserHash(1);
     const match = await verifyPassword(password, h)
       // Replace with your actual authentication logic (e.g., database check)
-      if (match) {
+    if (match) {
+        console.log("passwords match")
         const sessTok = generateSessionToken();
+        await createSession(sessTok, 1);
         return setSessionTokenCookie(sessTok)
 
-      } 
-      else {
+    } 
+    else {
+        console.log("passwords do not match")
         // Invalid credentials
         return Response.json({
             message: 'Login successful',
             token: 'your-generated-token',
           });
-      }
-    } 
+    }
+} 
 
 async function verifyPassword(inputPassword:string, hashedPassword:string) {
     try {

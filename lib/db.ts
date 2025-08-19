@@ -204,6 +204,8 @@ export async function getSession(): Promise<SelectSession | null> {
   return session
 }
 
+
+
 export async function getArtwork(id: number): Promise<SelectArtwork> {
   const rows = await db.select().from(artworks).where(eq(artworks.id, id));
   return rows[0];
