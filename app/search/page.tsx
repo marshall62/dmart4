@@ -1,17 +1,13 @@
 'use client';
 import MyLightbox from "@/components/my_lightbox";
-import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-export default function SearchArtworks() {
+export default function SearchArtworks({ searchParams}: { searchParams: { term?: string } }) {
     const [artworks, setArtworks] = useState([]);
-    const searchParams = useSearchParams();
     const url = '/api/artworks';
 
     useEffect(() => {
-        let ignore=false;
-        console.log(ignore)
-        const searchTerm = searchParams.get('term');
+        const searchTerm = searchParams.term;
         async function getArtworks_internal () {
             try {
                 const searchParam = searchTerm ? `?search=${searchTerm}` : '';
@@ -28,9 +24,7 @@ export default function SearchArtworks() {
         if (searchTerm) {
             getArtworks_internal();
         }
-        return () => {
-            ignore = true;
-        };
+
     }, [ searchParams])
 
     return (
