@@ -1,5 +1,5 @@
 import { generateSessionToken } from "@/lib/auth";
-import { createSession, getUserHash, insertUserToken } from "@/lib/db";
+import { createSession, getUserHash } from "@/lib/db";
 import bcrypt from 'bcrypt';
 
 function setSessionTokenCookie  (token: string) {
