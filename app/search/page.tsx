@@ -6,6 +6,7 @@ export default function SearchArtworks({ searchParams}: { searchParams: { term?:
     const [artworks, setArtworks] = useState([]);
     const url = '/api/artworks';
 
+    /* based on AI suggestion for handling search params */
     useEffect(() => {
         const searchTerm = searchParams.term;
         async function getArtworks_internal () {
