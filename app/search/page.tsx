@@ -1,14 +1,22 @@
-'use client';
+'use client'
 import MyLightbox from "@/components/my_lightbox";
 import { Suspense, useEffect, useState } from "react";
+// import { useSearchParams } from "next/navigation";
 
-export default function SearchArtworks({ searchParams}: { searchParams: { term?: string } }) {
+export default function SearchArtworks() {
     const [artworks, setArtworks] = useState([]);
     const url = '/api/artworks';
+    const [searchTerm, setSearchTerm] = useState<string | null>(null);
+    // const searchParams = useSearchParams();
+    // const searchTerm = searchParams.get('term');
 
-    /* based on AI suggestion for handling search params */
+    // Extract the search term from the URL on the client side
     useEffect(() => {
-        const searchTerm = searchParams.term;
+      const params = new URLSearchParams(window.location.search);
+      setSearchTerm(params.get('term'));
+  }, []);
+
+    useEffect(() => {
         async function getArtworks_internal () {
             try {
                 const searchParam = searchTerm ? `?search=${searchTerm}` : '';
@@ -26,7 +34,7 @@ export default function SearchArtworks({ searchParams}: { searchParams: { term?:
             getArtworks_internal();
         }
 
-    }, [ searchParams])
+    }, [ searchTerm])
 
     return (
     <Suspense fallback={<div>Loading...</div>}>
