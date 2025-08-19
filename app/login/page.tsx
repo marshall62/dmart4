@@ -38,6 +38,7 @@ export default function LoginPage() {
         setError('');
         router.push('/dashboard');
       } else {
+        console.log("login unsuccessful:", data);
         // Authentication failed, display error message
         setError(data.message || 'Invalid credentials');
       }
