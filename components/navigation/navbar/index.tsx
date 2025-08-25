@@ -19,6 +19,7 @@ const Navbar = () => {
 
   return (
     <>
+      <div className="hidden md:flex bg-gray-200 sticky z-10 text-4xl justify-center border-b border-gray-400"> D a v i d &nbsp;&nbsp;&nbsp;M a r s h a l l</div>
       <div className="w-full h-20 bg-gray-200 sticky top-0 z-10">
         <div className="container mx-auto px-4 h-full flex justify-between items-center">
             {/* Desktop Navigation */}
@@ -64,6 +65,7 @@ const Navbar = () => {
                   Search
                 </button>
               </form>
+              
             {/* Mobile Navigation */}
             <div className="md:hidden flex items-center">
               <Button
@@ -87,6 +89,7 @@ const Navbar = () => {
                   />
                 </svg>
               </Button>
+              <div className="ml-8">David Marshall</div>
             </div>
             {/* Mobile Navigation */}
             {isMobileMenuOpen && (
@@ -137,6 +140,7 @@ const Navbar = () => {
               </div>
             )}
         </div>
+        
       </div>
     </>
   );
