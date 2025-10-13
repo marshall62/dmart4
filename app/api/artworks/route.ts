@@ -234,7 +234,7 @@ export async function GET(request: Request) {
     console.log("found them", artworks);
     return Response.json(artworks);
   } else if (isForRecentWork) {
-    const artworks = await getArtworksAfterDate(2020);
+    const artworks = await getRecentArtworks()
     console.log("found them", artworks);
     return Response.json(artworks);
   } else if (isForExemplars) {
@@ -248,6 +248,15 @@ export async function GET(request: Request) {
     console.log("found them", artworks);
     return Response.json(artworks);
   }
+}
+
+async function getRecentArtworks(): Promise<SelectArtwork[]> {
+  // get the current year
+  const year = new Date().getFullYear();
+  // get all artworks from the last 5 years
+  const artworks = await getArtworksAfterDate(year - 5);
+  // keep the first 20
+  return artworks.slice(0, 20);
 }
 
 async function deleteBlob(url: string) {

@@ -14,7 +14,7 @@ import {
   serial,
   primaryKey
 } from 'drizzle-orm/pg-core';
-import { or, eq, ilike, relations, gte, and } from 'drizzle-orm';
+import { or, eq, ilike, relations, gte, and, desc } from 'drizzle-orm';
 import { createInsertSchema } from 'drizzle-zod';
 import { encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
@@ -174,7 +174,7 @@ export async function getArtworksAfterDate(year: number): Promise<SelectArtwork[
         eq(artworks.is_active, true),
         gte(artworks.year, year)
       )
-      ).orderBy(artworks.id);
+      ).orderBy(desc(artworks.year));
 }
 
 export async function getArtworksWithLabel(label: string): Promise<SelectArtwork[]> {
