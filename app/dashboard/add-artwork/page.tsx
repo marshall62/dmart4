@@ -49,7 +49,7 @@ export default function AddArtwork () {
            setArtwork(aw);
            setIsActive(aw.is_active ?? true);
            setSelectedTags([])
-           setThumbnail(aw.thumbnail_image_url)
+           setThumbnail(aw.midsize_image_url ?? aw.thumbnail_image_url)
         }
         if (id) {
             doLoad().catch(console.log)     
@@ -246,7 +246,7 @@ export default function AddArtwork () {
                     </div>
                     <div className="mb-5">
                         <label htmlFor="active"className=' bold mb-3'>Active</label>
-                        <input className="form-checkbox h-5 w-5 text-blue-600 transition duration-150 ease-in-out" id="active" 
+                        <input className="form-checkbox h-5 w-5 ml-2 text-blue-600 transition duration-150 ease-in-out" id="active" 
                             name="is_active" type="checkbox" checked={checkActive()}
                             onChange={updateIsActive}>
                         </input>
@@ -258,10 +258,10 @@ export default function AddArtwork () {
                     <input id="fileInput" onChange={handleImageFileChange} value="" name="imageFile" type="file"></input>
                     {thumbnail ?
                         <div className="mt-4">{imageFile ? imageFile.name : artwork!.filename} 
-                        <img alt="thumbnail" src={thumbnail} /></div> : <div/>}
+                        <img alt="thumbnail" src={thumbnail} className="w-[600px] h-auto object-contain" /></div> : <div/>}
                 </div>
                 {artwork &&
-                    <div className="">
+                    <div className="ml-4">
                         <label htmlFor="urls"className=' bold mb-3'>URLs</label>
                         <div id="urls">
                             <span><b>Large Image:</b> 
@@ -285,7 +285,7 @@ export default function AddArtwork () {
                     </div>
                 }
             </div>
-            <div className="flex">
+            <div className="flex mt-2">
             
                 <div className="mb-5">
                     <label htmlFor="media"className=' bold mb-3'>Media</label>
