@@ -15,7 +15,7 @@ export default function AddArtwork () {
     const id = searchParams.get('id')
     const router = useRouter();
     const [, setSelectedTags] = useState<string[]>([])
-    const [tags, setTags] = useState<string>()
+    const [tags, setTags] = useState<string>('')
     const [, setIsActive] = useState<boolean>(true);
     const [, setSuggestedTags] = useState([])
 
