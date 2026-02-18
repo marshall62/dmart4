@@ -1,7 +1,11 @@
 // import { db, artworks } from 'lib/db';
 // import { getLocalData } from 'lib/localdata_artworks';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  return Response.json({ message: "Seed art endpoint - currently disabled" });
+}
 
 // async function addTestRecord() {
 //   let rec: any =   {
@@ -21,7 +25,6 @@ export const dynamic = 'force-dynamic';
 //   // rec = {media: "what the fuck", mongo_uuid: "jjj"}
 //   await db.insert(artworks).values(rec);
 // }
-
 
 // async function insertRecord (r: any) {
 //   console.log("record:", r);
@@ -44,4 +47,3 @@ export const dynamic = 'force-dynamic';
 //     message: ' DB is set up.' + ` ${title} ${len} records`
 //   });
 // }
-
