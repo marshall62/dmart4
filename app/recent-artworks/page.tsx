@@ -1,33 +1,34 @@
-'use client';
-import { useEffect, useState } from "react";
+"use client";
+import { useEffect, useState, Suspense } from "react";
 import MyLightbox from "../../components/my_lightbox";
 
-function RecentArtworks () {
+function RecentArtworks() {
   const [artworks, setArtworks] = useState([]);
-  const url = '/api/artworks?recent=true';
-  
+  const url = "/api/artworks?recent=true";
+
   useEffect(() => {
     const fetchArtworks = async () => {
       try {
         const response = await fetch(url);
         if (!response.ok) {
-          throw new Error('Failed to fetch artworks');
+          throw new Error("Failed to fetch artworks");
         }
         const data = await response.json();
         setArtworks(data);
       } catch (error) {
-        console.error('Error fetching artworks:', error);
+        console.error("Error fetching artworks:", error);
       }
     };
-      fetchArtworks();
-  }
-    , []);
+    fetchArtworks();
+  }, []);
 
   return (
-    <div><MyLightbox artworks={artworks}/></div>
-    
-  )
-    
+    <div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <MyLightbox artworks={artworks} />
+      </Suspense>
+    </div>
+  );
 }
 
 export default RecentArtworks;

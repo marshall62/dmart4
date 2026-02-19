@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import MyLightbox from "../../../components/my_lightbox";
 import { useParams } from "next/navigation";
 
@@ -33,7 +33,9 @@ function GroupArtworks() {
 
   return (
     <div>
-      <MyLightbox artworks={artworks} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <MyLightbox artworks={artworks} />
+      </Suspense>
     </div>
   );
 }
