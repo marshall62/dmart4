@@ -20,6 +20,63 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Testing
+
+This project uses [Vitest](https://vitest.dev/) for testing API handlers against a local PostgreSQL database.
+
+### Prerequisites
+
+Tests require a local PostgreSQL instance. If you haven't set it up yet:
+
+```bash
+# Install PostgreSQL 16 via Homebrew
+brew install postgresql@16
+
+# Start the PostgreSQL service
+brew services start postgresql@16
+
+# Create the test database
+/opt/homebrew/opt/postgresql@16/bin/createdb dmart_test
+
+# Set up the schema and seed data
+/opt/homebrew/opt/postgresql@16/bin/psql -d dmart_test -f scripts/setup-test-db.sql
+/opt/homebrew/opt/postgresql@16/bin/psql -d dmart_test -f scripts/seed-test-data.sql
+```
+
+### Running Tests
+
+```bash
+npm test
+```
+
+### Managing PostgreSQL
+
+**Check if PostgreSQL is running:**
+
+```bash
+brew services list | grep postgresql
+```
+
+**Start PostgreSQL:**
+
+```bash
+brew services start postgresql@16
+```
+
+**Stop PostgreSQL:**
+
+```bash
+brew services stop postgresql@16
+```
+
+**Verify database connection:**
+
+```bash
+/opt/homebrew/opt/postgresql@16/bin/psql -d dmart_test -c "SELECT COUNT(*) FROM artworks;"
+```
+
+**Note:** PostgreSQL must be running before executing tests. The tests do not automatically start the database service.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -35,14 +92,12 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-
 ## USing Postgres locally
 
-PgAdmin4 is being used to view data in the vercel database.  It has a connection string of
+PgAdmin4 is being used to view data in the vercel database. It has a connection string of
 hostname: ep-rough-paper-a4opslp9-pooler.us-east-1.aws.neon.tech
 port: 5432
 Maintenance db: verceldb
 username: default
-
 
 Update github PAT 1/16/27

@@ -39,7 +39,7 @@ function strOrNull(v: FormDataEntryValue | null): string | null {
 function checkAndAddField(
   field: string,
   rec: Partial<SelectArtwork>,
-  formData: FormData
+  formData: FormData,
 ) {
   const f = field as keyof SelectArtwork;
   if (formData.get(field)) {
@@ -50,7 +50,7 @@ function checkAndAddField(
 function checkAndAddIntField(
   field: string,
   rec: Partial<SelectArtwork>,
-  formData: FormData
+  formData: FormData,
 ) {
   if (formData.get(field)) {
     const f = field as keyof SelectArtwork;
@@ -61,7 +61,7 @@ function checkAndAddIntField(
 function checkAndAddFloatField(
   field: string,
   rec: Partial<SelectArtwork>,
-  formData: FormData
+  formData: FormData,
 ) {
   // @ts-expect-error formData get returns FormDataEntryValue which is a union type
   if (formData.get(field)) rec[field] = floatOrNull(formData.get(field));
@@ -69,7 +69,7 @@ function checkAndAddFloatField(
 function checkAndAddBooleanField(
   field: string,
   rec: Partial<SelectArtwork>,
-  formData: FormData
+  formData: FormData,
 ) {
   // @ts-expect-error formData get returns FormDataEntryValue which is a union type
   if (formData.get(field)) rec[field] = formData.get(field) === "true";
@@ -218,6 +218,9 @@ export async function GET(request: Request) {
     console.log("looking for artwork", id);
     const artwork = await getArtwork(parseInt(id));
     console.log("found it", artwork);
+    if (!artwork) {
+      return Response.json({ error: "Not found" }, { status: 404 });
+    }
     return Response.json(artwork);
   } else if (searchTerm) {
     console.log("looking for artwork with search term", searchTerm);
@@ -234,7 +237,7 @@ export async function GET(request: Request) {
     console.log("found them", artworks);
     return Response.json(artworks);
   } else if (isForRecentWork) {
-    const artworks = await getRecentArtworks()
+    const artworks = await getRecentArtworks();
     console.log("found them", artworks);
     return Response.json(artworks);
   } else if (isForExemplars) {
@@ -282,4 +285,5 @@ export async function DELETE(request: Request) {
     await deleteArtworkById(id);
     return Response.json({});
   }
+  return Response.json({ error: "Not found" }, { status: 404 });
 }
