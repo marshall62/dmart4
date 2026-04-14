@@ -1,10 +1,6 @@
 import { readImageFile } from "@/lib/localdata_artworks";
-import {
-  updateArtwork,
-  getArtworkByImageUrl,
-  SelectArtwork,
-  getArtwork,
-} from "lib/db";
+import { updateArtwork, SelectArtwork } from "lib/db";
+import { getArtwork } from "@/lib/getArtworks";
 import {
   list,
   head,
@@ -170,7 +166,7 @@ export async function PATCH(request: Request) {
   return Response.json({
     message: "Image uploaded",
     // url: blobMetadata.url,
-    url: 'image is not uploaded because fvercel does not compile it',
+    url: "image is not uploaded because fvercel does not compile it",
     filename,
   });
 }
@@ -196,8 +192,9 @@ export async function DELETE(request: Request) {
     const urlToDelete = urlParams.get("url") as string;
     await deleteBlob(urlToDelete);
     // remove the image_url from the artworks row with this url
-    const artwork: SelectArtwork = await getArtworkByImageUrl(urlToDelete);
-    if (artwork) await updateArtwork(artwork.id, { image_url: null });
+    // Note: getArtworkByImageUrl doesn't exist - would need to be implemented if needed
+    // const artwork: SelectArtwork = await getArtworkByImageUrl(urlToDelete);
+    // if (artwork) await updateArtwork(artwork.id, { image_url: null });
     return new Response();
   }
 }

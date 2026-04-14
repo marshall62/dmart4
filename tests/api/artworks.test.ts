@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { GET, POST, PATCH, DELETE } from "@/app/api/artworks/route";
+import { GET, POST, PATCH, DELETE } from "../../app/api/artworks/route";
 
 // Mock Next.js cookies
 vi.mock("next/headers", () => ({
