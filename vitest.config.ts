@@ -12,6 +12,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      "@/lib/getArtworks": path.resolve(
+        __dirname,
+        "./tests/mocks/getArtworks.ts",
+      ),
       "@/lib/db": path.resolve(__dirname, "./tests/mocks/db.ts"),
       "server-only": path.resolve(__dirname, "./tests/mocks/server-only.ts"),
       "@": path.resolve(__dirname, "./"),

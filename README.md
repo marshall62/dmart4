@@ -100,4 +100,36 @@ port: 5432
 Maintenance db: verceldb
 username: default
 
+## Email from inquiries form
+
+The contact form sends emails using Resend. The API key is stored in the RESEND_API_KEY environment variable.  To configure resend, go to https://resend.com/api-keys and create a new API key.   I logged into resend with my gmail account and created a new API key.   I also went to godaddy and configured the domain to use resend for email.  This should all be free.
+
+## Testing
+
+npm run test
+
+To verify that postgres is running locally:
+```bash
+brew services list | grep postgresql 
+```
+
+If it's not running, start it with:
+```bash
+brew services start postgresql@16
+```
+
+Verify the test database exists:
+```bash
+/opt/homebrew/opt/postgresql@16/bin/psql -d dmart_test -c "SELECT COUNT(*) FROM artworks;"
+```
+
+The tests/setup.ts runs before all tests:
+Executes setup-test-db.sql to create tables
+Before each individual test:
+Truncates all tables
+Reseeds with data from seed-test-data.sql
+
+Environment variables: The test uses POSTGRES_URL=postgresql://localhost:5432/dmart_test (set in vitest.config.ts), so no .env file needed for tests.
+
+
 Update github PAT 1/16/27

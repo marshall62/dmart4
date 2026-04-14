@@ -4,16 +4,18 @@ import {
   db,
   deleteArtworkById,
   deleteTagJoinsForArtwork,
+  SelectArtwork,
+  updateArtwork,
+  updateArtworkTags,
+} from "@/lib/db";
+import {
   getActiveArtworks,
   getArtwork,
   getArtworksAfterDate,
   getArtworksInCategory,
   getArtworksThatMatch,
   getArtworksWithLabel,
-  SelectArtwork,
-  updateArtwork,
-  updateArtworkTags,
-} from "@/lib/db";
+} from "@/lib/getArtworks";
 import { del, put } from "@vercel/blob";
 
 /* Uploads an image file to the vercel blob storage */
