@@ -1,8 +1,37 @@
 .image-gallery-description {
-    position: initial !important;
-    display: block;
-    width: 100%;
-  }   
-  .image-gallery-image {
-    max-height: calc(100vh - 80px) !important;
+  position: initial !important;
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.image-gallery-image {
+  max-height: calc(100vh - 280px) !important;
+}
+
+/* Adjust for tablets */
+@media (min-width: 768px) {
+  .image-gallery-description {
+    margin-top: 0;
   }
+  .image-gallery-image {
+    max-height: calc(100vh - 300px) !important;
+  }
+}
+
+/* Adjust for desktop */
+@media (min-width: 1024px) {
+  .image-gallery-image {
+    max-height: calc(100vh - 320px) !important;
+  }
+}
+
+/* Landscape mode - make image much larger since no thumbnails */
+@media (max-height: 600px) {
+  .image-gallery-image {
+    max-height: calc(100vh - 150px) !important;
+  }
+  .image-gallery-description {
+    margin-top: 0.5rem;
+  }
+}

@@ -11,7 +11,8 @@ import { useEffect, useRef } from "react";
 export default function MyLightbox({ artworks }: { artworks: Artwork[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isMobile = useMediaQuery({ maxWidth: 767 });
+  const isSmallMobile = useMediaQuery({ maxWidth: 390 });
+  const isLandscape = useMediaQuery({ maxHeight: 600 });
   const galleryRef = useRef<ImageGallery>(null);
   const hasInitialized = useRef(false);
 
@@ -62,14 +63,21 @@ export default function MyLightbox({ artworks }: { artworks: Artwork[] }) {
     router.push("?" + params.toString());
   };
 
-  console.log("isMobile:", isMobile);
+  console.log(
+    "isSmallMobile:",
+    isSmallMobile,
+    "isLandscape:",
+    isLandscape,
+    "showThumbnails:",
+    !isSmallMobile && !isLandscape,
+  );
 
   // const isPhoneInLandscapeMode = window.matchMedia("(orientation: landscape) and (max-width: 768px)").matches;
   return (
     <div className="image-gallery-description">
       <ImageGallery
         ref={galleryRef}
-        showThumbnails={!isMobile}
+        showThumbnails={!isSmallMobile && !isLandscape}
         onSlide={handleSlideChange}
         showIndex={true}
         items={images}
