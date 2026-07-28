@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
 import "./globals.css";
-import Navbar from '@/components/navigation/navbar';
+import Navbar from "@/components/navigation/navbar";
 import { SelectArtwork } from "@/lib/db";
 import { useEffect, useState } from "react";
 import { GlobalProvider } from "./context/GlobalContext";
-
 
 export default function RootLayout({
   children,
@@ -15,11 +14,8 @@ export default function RootLayout({
   const [artworks, setArtworks] = useState<SelectArtwork[]>([]);
   // const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
-
-
-  useEffect (() => {
-    const login =  async () => {    
-
+  useEffect(() => {
+    const login = async () => {
       try {
         const resp = await fetch("/api/artworks");
         if (!resp.ok) {
@@ -29,33 +25,33 @@ export default function RootLayout({
         const allArtworks = artworksJson as SelectArtwork[];
         // const artistConfig = await fetch("/api/artist");
         setArtworks(allArtworks);
-
       } catch (err) {
         if (err instanceof Error) {
           console.error("Failed to log in", err.message);
         } else {
           console.error("Failed to log in", err);
-        }     
+        }
       }
-    }
-    
+    };
+
     login();
-
-  },[]);
-
+  }, []);
 
   return (
-    <html>
+    <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
       <body>
-        <div className="container flex flex-col">
-          <Navbar/>
-          <GlobalProvider artworks={artworks}> 
-          <div className="content">
-            {children}
-          </div>
+        <div className="min-h-screen flex flex-col w-full">
+          <Navbar />
+          <GlobalProvider artworks={artworks}>
+            <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
           </GlobalProvider>
-        </div>    
-    </body>
-    </html> 
+        </div>
+      </body>
+    </html>
   );
 }

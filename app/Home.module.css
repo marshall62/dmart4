@@ -1,8 +1,15 @@
 .homeImage {
-    max-width: 100%;
-    
-  }
-  
-  .homeImageContainer {
-    /* display: flex; */
-  }
+  max-width: 100%;
+  max-height: 80vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.homeImageContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 60vh;
+}

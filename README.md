@@ -133,3 +133,10 @@ Environment variables: The test uses POSTGRES_URL=postgresql://localhost:5432/dm
 
 
 Update github PAT 1/16/27
+
+## Vercel
+
+https://vercel.com/marshall62s-projects
+https://vercel.com/marshall62s-projects/dmart4
+
+
