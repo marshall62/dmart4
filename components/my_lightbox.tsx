@@ -11,7 +11,7 @@ import { useEffect, useRef } from "react";
 export default function MyLightbox({ artworks }: { artworks: Artwork[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isSmallMobile = useMediaQuery({ maxWidth: 390 });
+  const isSmallMobile = useMediaQuery({ maxWidth: 375 });
   const isLandscape = useMediaQuery({ maxHeight: 600 });
   const galleryRef = useRef<ImageGallery>(null);
   const hasInitialized = useRef(false);
