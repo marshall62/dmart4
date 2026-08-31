@@ -63,15 +63,6 @@ export default function MyLightbox({ artworks }: { artworks: Artwork[] }) {
     router.push("?" + params.toString());
   };
 
-  console.log(
-    "isSmallMobile:",
-    isSmallMobile,
-    "isLandscape:",
-    isLandscape,
-    "showThumbnails:",
-    !isSmallMobile && !isLandscape,
-  );
-
   // const isPhoneInLandscapeMode = window.matchMedia("(orientation: landscape) and (max-width: 768px)").matches;
   return (
     <div className="image-gallery-description">
