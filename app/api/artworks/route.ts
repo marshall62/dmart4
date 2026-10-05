@@ -18,25 +18,45 @@ import {
 } from "@/lib/getArtworks";
 import { del, put } from "@vercel/blob";
 
+type ImageSize = "large" | "midsize" | "thumbnail";
+
+/* The three sizes of an artwork share a filename, so they must live under
+ * separate prefixes; otherwise the second put() would collide with the first. */
+function blobPath(size: ImageSize, filename: string) {
+  return `${size}/${filename}`;
+}
+
 /* Uploads an image file to the vercel blob storage */
-async function uploadImage(filename: string, file: File | ArrayBuffer) {
-  const upload = await put(filename, file, {
+async function uploadImage(
+  size: ImageSize,
+  filename: string,
+  file: File | ArrayBuffer,
+) {
+  const upload = await put(blobPath(size, filename), file, {
     access: "public",
     contentType: "image/jpeg",
+    // re-saving an artwork with the same filename must replace the old blob
+    allowOverwrite: true,
   });
   return upload;
 }
 
 function intOrNull(v: FormDataEntryValue | null): number | null {
-  return typeof v === "string" ? parseInt(v) : null;
+  if (typeof v !== "string" || v.trim() === "") return null;
+  const n = parseInt(v, 10);
+  return Number.isNaN(n) ? null : n;
 }
 
 function floatOrNull(v: FormDataEntryValue | null): number | null {
-  return typeof v === "string" ? parseFloat(v) : null;
+  if (typeof v !== "string" || v.trim() === "") return null;
+  const n = parseFloat(v);
+  return Number.isNaN(n) ? null : n;
 }
 
 function strOrNull(v: FormDataEntryValue | null): string | null {
-  return v ? v.toString() : null;
+  if (typeof v !== "string") return v ? v.toString() : null;
+  const s = v.trim();
+  return s === "" || s === "Select One" ? null : s;
 }
 function checkAndAddField(
   field: string,
@@ -122,12 +142,28 @@ export async function PATCH(request: Request) {
   if (new_data.filename && file && midsize_file && thumbnail_file) {
     console.log("Updating artwork with new image files", new_data.filename);
     const artwork = await getArtwork(artId);
-    if (artwork.image_url) deleteBlob(artwork.image_url!);
-    if (artwork.midsize_image_url) deleteBlob(artwork.midsize_image_url!);
-    if (artwork.thumbnail_image_url) deleteBlob(artwork.thumbnail_image_url!);
-    const large_blob = await uploadImage(new_data.filename, file);
-    const mid_blob = await uploadImage(new_data.filename, midsize_file);
-    const thumb_blob = await uploadImage(new_data.filename, thumbnail_file);
+    // delete the old blobs before re-uploading, and don't let a stale/missing
+    // blob url fail the whole update
+    await Promise.allSettled(
+      [
+        artwork.image_url,
+        artwork.midsize_image_url,
+        artwork.thumbnail_image_url,
+      ]
+        .filter((url): url is string => !!url)
+        .map((url) => deleteBlob(url)),
+    );
+    const large_blob = await uploadImage("large", new_data.filename, file);
+    const mid_blob = await uploadImage(
+      "midsize",
+      new_data.filename,
+      midsize_file,
+    );
+    const thumb_blob = await uploadImage(
+      "thumbnail",
+      new_data.filename,
+      thumbnail_file,
+    );
     new_data["image_url"] = large_blob.url;
     new_data["midsize_image_url"] = mid_blob.url;
     new_data["thumbnail_image_url"] = thumb_blob.url;
@@ -149,6 +185,21 @@ export async function POST(request: Request) {
     return Response.json({ error: "Not authorized" }, { status: 401 });
   }
   const form = await request.formData();
+
+  // title and media are NOT NULL in the db, so validate before uploading any
+  // images; otherwise a failed insert would leave orphaned blobs behind
+  const title = strOrNull(form.get("title"));
+  const media = strOrNull(form.get("media"));
+  const missing = [!title ? "title" : null, !media ? "media" : null].filter(
+    Boolean,
+  );
+  if (missing.length > 0) {
+    return Response.json(
+      { error: `Missing required field(s): ${missing.join(", ")}` },
+      { status: 400 },
+    );
+  }
+
   const file = form.has("imageFile") ? (form.get("imageFile") as File) : null;
   const thumbnail = form.has("thumbnailFile")
     ? (form.get("thumbnailFile") as File)
@@ -156,25 +207,28 @@ export async function POST(request: Request) {
   const midsize = form.has("midsizeFile")
     ? (form.get("midsizeFile") as File)
     : null;
+  // the client sends the three sizes as Blobs, so their `name` is always
+  // "blob"; use the uploaded filename for the blob paths instead
+  const filename = strOrNull(form.get("filename")) ?? file?.name ?? "artwork";
   let blobMetadata = null;
   if (file) {
     const imageData = await file.arrayBuffer();
-    blobMetadata = await uploadImage(file.name, imageData);
+    blobMetadata = await uploadImage("large", filename, imageData);
   }
   let thumbnailMetadata = null;
   if (thumbnail) {
     const imageData = await thumbnail.arrayBuffer();
-    thumbnailMetadata = await uploadImage(thumbnail.name, imageData);
+    thumbnailMetadata = await uploadImage("thumbnail", filename, imageData);
   }
 
   let midsizeMetadata = null;
   if (midsize) {
     const imageData = await midsize.arrayBuffer();
-    midsizeMetadata = await uploadImage(midsize.name, imageData);
+    midsizeMetadata = await uploadImage("midsize", filename, imageData);
   }
 
   const rec: SelectArtwork = {
-    title: (form.get("title") as string) ?? "",
+    title: title!,
     year: intOrNull(form.get("year")),
     // @ts-expect-error form.get returns FormDataEntryValue which is a union type
     width: floatOrNull(form.get("width")),
@@ -182,8 +236,7 @@ export async function POST(request: Request) {
     height: floatOrNull(form.get("height")),
     // @ts-expect-error form.get returns FormDataEntryValue which is a union type
     filename: form.get("filename") || null,
-    // @ts-expect-error form.get returns FormDataEntryValue which is a union type
-    media: strOrNull(form.get("media")),
+    media: media!,
     mongo_id: null,
     image_url: blobMetadata ? blobMetadata.url : null,
     midsize_image_url: midsizeMetadata ? midsizeMetadata.url : null,
