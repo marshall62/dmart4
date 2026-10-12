@@ -52,6 +52,11 @@ const Navbar = () => {
                 <p>About Me and Inquiries</p>
               </Link>
             </li>
+            <li>
+              <Link href="/composer">
+                <p>Composer</p>
+              </Link>
+            </li>
           </ul>
           <form
             onSubmit={handleSearch}
@@ -136,6 +141,14 @@ const Navbar = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     About Me and Inquiries
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/composer"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Composer
                   </Link>
                 </li>
                 {/* Mobile Search Form */}
